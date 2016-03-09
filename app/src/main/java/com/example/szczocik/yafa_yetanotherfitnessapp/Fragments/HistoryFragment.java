@@ -8,9 +8,14 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.SessionsList;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,6 +28,8 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 public class HistoryFragment extends Fragment {
 
     DatabaseHandler db;
+
+    ListView list;
 
     private OnFragmentInteractionListener mListener;
 
@@ -51,6 +58,16 @@ public class HistoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_history, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        ArrayList<RunningSession> rsList = db.getSessions();
+        SessionsList adapter = new SessionsList(getActivity(), R.layout.sessions_list, rsList);
+
+        list = (ListView) view.findViewById(R.id.list);
+        list.setAdapter(adapter);
+
     }
 
     // TODO: Rename method, update argument and hook method into UI event

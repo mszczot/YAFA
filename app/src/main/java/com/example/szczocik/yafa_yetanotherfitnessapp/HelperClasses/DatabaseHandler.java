@@ -10,6 +10,8 @@ import android.location.Location;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by szczocik on 09/03/16.
@@ -17,7 +19,8 @@ import java.io.Serializable;
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     //All static variables
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3
+            ;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -30,6 +33,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     private static final String START_TIME = "start_time";
     private static final String END_TIME = "end_time";
     private static final String AVG_SPEED = "avg_speed";
+    private static final String DISTANCE = "dist";
 
     /**
      * Table for storing locations
@@ -51,7 +55,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TABLE_SESSIONS = "CREATE TABLE " + TABLE_SESSIONS + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + START_TIME + " INTEGER,"
-                + END_TIME + " INTEGER," + AVG_SPEED + " REAL" + ")";
+                + END_TIME + " INTEGER," + AVG_SPEED + " REAL, " + DISTANCE + " REAL)";
         db.execSQL(CREATE_TABLE_SESSIONS);
         String CREATE_TABLE_LOCATIONS = "CREATE TABLE " + TABLE_LOCATIONS + "("
                 + LOCATION_ID + " INTEGER PRIMARY KEY," + LOCATION_LAT + " REAL,"
@@ -74,6 +78,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         values.put(START_TIME, rs.getStartTime());
         values.put(END_TIME, rs.getEndTime());
         values.put(AVG_SPEED, rs.getAvgSpeed());
+        values.put(DISTANCE, rs.getDistance());
 
         db.insert(TABLE_SESSIONS, null, values);
         db.close();
@@ -104,5 +109,24 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
         // return count
         return count;
+    }
+
+    public ArrayList<RunningSession> getSessions() {
+        String getSessions = "SELECT * FROM " + TABLE_SESSIONS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(getSessions, null);
+        cursor.moveToFirst();
+        ArrayList<RunningSession> rsList = new ArrayList<>();
+        RunningSession rs;
+
+        while (!cursor.isAfterLast()) {
+            rs = new RunningSession(cursor.getLong(1),
+                    cursor.getLong(2), cursor.getFloat(3));
+            rsList.add(rs);
+            cursor.moveToNext();
+        }
+        cursor.close();
+
+        return  rsList;
     }
 }

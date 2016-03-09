@@ -25,6 +25,7 @@ public class TimerFragment extends Fragment {
 
     public Chronometer chronometer;
     public TextView speedMeasurement;
+    public TextView avgSpeedTV;
 
     private OnFragmentInteractionListener mListener;
 
@@ -51,6 +52,7 @@ public class TimerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         chronometer = (Chronometer) view.findViewById(R.id.chronometer);
         speedMeasurement = (TextView) view.findViewById(R.id.speedMeasurement);
+        avgSpeedTV = (TextView) view.findViewById(R.id.avgSpeed);
         return view;
     }
 

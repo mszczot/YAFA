@@ -1,6 +1,5 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp;
 
-import android.location.Location;
 import android.net.Uri;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -79,13 +78,7 @@ public class MainActivity extends AppCompatActivity
 
     private void setup() {
         db = new DatabaseHandler(this);
-
         runningFragment = (RunningFragment) mSectionsPagerAdapter.getItem(1);
-
-    }
-
-    public void updateLocation(Location location) {
-        runningFragment.addLocation(location);
     }
 
     @Override
@@ -186,11 +179,11 @@ public class MainActivity extends AppCompatActivity
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "SECTION 1";
+                    return "STATISTICS";
                 case 1:
-                    return "SECTION 2";
+                    return "RUN";
                 case 2:
-                    return "SECTION 3";
+                    return "HISTORY";
             }
             return null;
         }

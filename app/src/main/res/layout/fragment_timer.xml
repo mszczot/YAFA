@@ -88,6 +88,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/avgSpeed"
                 android:text="@string/avgSpeed"
                 android:gravity="center_horizontal"/>
 

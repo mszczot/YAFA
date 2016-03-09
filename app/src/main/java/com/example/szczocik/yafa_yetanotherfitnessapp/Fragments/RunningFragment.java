@@ -57,7 +57,7 @@ public class RunningFragment extends Fragment
 
     Button startButton;
     TimerFragment timerFragment;
-    Location location;
+    Location mlocation;
 
     GoogleMap mMap;
 
@@ -122,7 +122,7 @@ public class RunningFragment extends Fragment
 
         googleApiClient.connect();
 
-        runningSession = new RunningSession(location);
+        runningSession = new RunningSession(mlocation);
     }
 
     public void setupMapSettings() {
@@ -189,20 +189,23 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
-        this.location = location;
-        Toast.makeText(getContext(), location.toString(), Toast.LENGTH_LONG).show();
+        this.mlocation = location;
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
         addLocation(location);
         if (isInSession) {
-            timerFragment.speedMeasurement.setText(String.valueOf(location.getSpeed()));
+            if (location.hasSpeed()) {
+                timerFragment.speedMeasurement.setText(String.valueOf(location.getSpeed()));
+            } else {
+                timerFragment.speedMeasurement.setText(String.valueOf(runningSession.calculateCurrentSpeed()));
+            }
+            timerFragment.avgSpeedTV.setText(String.valueOf(runningSession.getAverageSpeed()));
         }
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         Log.d("Position Tracker", "Google APi Client connected");
-        Toast.makeText(getContext(), "Google Api connected", Toast.LENGTH_LONG).show();
         requestLocationUpdates();
     }
 
@@ -253,19 +256,15 @@ public class RunningFragment extends Fragment
     }
 
     public void startSession(){
-        runningSession = new RunningSession(location);
+        runningSession = new RunningSession(mlocation);
+        Toast.makeText(getActivity(), String.valueOf(runningSession.getStartTime()), Toast.LENGTH_LONG).show();
         timerFragment.resetChronometer();
         timerFragment.startChronometer();
-        if (location != null) {
-            timerFragment.speedMeasurement.setText(String.valueOf(location.getSpeed()));
-        }
-        else {
-            timerFragment.speedMeasurement.setText(getResources().getString(R.string.speed0));
-        }
     }
 
     public void stopSession(){
         runningSession.stop();
+        runningSession.calculateDistance();
         timerFragment.stopChronometer();
         timerFragment.speedMeasurement.setText(getResources().getString(R.string.none));
     }
