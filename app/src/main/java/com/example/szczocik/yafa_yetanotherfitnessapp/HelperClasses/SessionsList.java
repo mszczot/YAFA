@@ -1,7 +1,6 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses;
 
 import android.app.Activity;
-import android.content.Context;
 import android.text.Html;
 import android.text.Spanned;
 import android.view.LayoutInflater;
@@ -10,12 +9,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
-import java.net.HttpCookie;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by szczocik on 09/03/16.
@@ -24,12 +22,15 @@ public class SessionsList extends ArrayAdapter<RunningSession> {
 
     private final Activity context;
     private final ArrayList<RunningSession> rsList;
+    private final ArrayList<LocationObject> locList;
 
 
-    public SessionsList(Activity context, int resource, ArrayList<RunningSession> rsList) {
+    public SessionsList(Activity context, int resource, ArrayList<RunningSession> rsList,
+                        ArrayList<LocationObject> locList) {
         super(context, resource, rsList);
         this.context = context;
         this.rsList = rsList;
+        this.locList = locList;
     }
 
     public View getView(int position, View view, ViewGroup parent) {
@@ -42,10 +43,17 @@ public class SessionsList extends ArrayAdapter<RunningSession> {
 
         Spanned sp = Html.fromHtml(rsList.get(position).getStartDate());
 
+        String t = "";
         date.setText(sp);
-        distance.setText(String.valueOf(rsList.get(position).getDistance()));
-        totalTime.setText(rsList.get(position).getTotalTime());
 
+        for (int i=0;i<locList.size();i++) {
+            if (locList.get(i).getSessionId() == rsList.get(position).getSessionId()) {
+                t += locList.get(i).toString();
+            }
+        }
+
+        distance.setText(t);
+        totalTime.setText(rsList.get(position).getTotalTime());
 
         return rowView;
     }

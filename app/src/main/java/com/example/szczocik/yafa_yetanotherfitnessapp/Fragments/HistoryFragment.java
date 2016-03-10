@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.SessionsList;
@@ -63,7 +64,8 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         ArrayList<RunningSession> rsList = db.getSessions();
-        SessionsList adapter = new SessionsList(getActivity(), R.layout.sessions_list, rsList);
+        ArrayList<LocationObject> locList = db.getLocations();
+        SessionsList adapter = new SessionsList(getActivity(), R.layout.sessions_list, rsList, locList  );
 
         list = (ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);

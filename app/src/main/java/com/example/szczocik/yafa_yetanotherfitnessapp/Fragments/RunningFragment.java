@@ -189,6 +189,7 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
+        Toast.makeText(getActivity(), location.toString(), Toast.LENGTH_LONG).show();
         this.mlocation = location;
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
@@ -200,6 +201,8 @@ public class RunningFragment extends Fragment
                 timerFragment.speedMeasurement.setText(String.valueOf(runningSession.calculateCurrentSpeed()));
             }
             timerFragment.avgSpeedTV.setText(String.valueOf(runningSession.getAverageSpeed()));
+
+            db.addLocation(location, runningSession.getSessionId());
         }
     }
 
@@ -245,8 +248,6 @@ public class RunningFragment extends Fragment
             startButton.setBackgroundColor(getResources().getColor(R.color.green));
             startButton.setText(getResources().getString(R.string.start));
             stopSession();
-            db.addSession(runningSession);
-            Log.d("Sessions", String.valueOf(db.getSessionsCount()));
         } else {
             isInSession = true;
             startButton.setBackgroundColor(getResources().getColor(R.color.red));
@@ -257,14 +258,15 @@ public class RunningFragment extends Fragment
 
     public void startSession(){
         runningSession = new RunningSession(mlocation);
-        Toast.makeText(getActivity(), String.valueOf(runningSession.getStartTime()), Toast.LENGTH_LONG).show();
         timerFragment.resetChronometer();
         timerFragment.startChronometer();
+        runningSession.setSessionId(db.addSession(runningSession));
     }
 
     public void stopSession(){
         runningSession.stop();
         runningSession.calculateDistance();
+        db.updateSession(runningSession);
         timerFragment.stopChronometer();
         timerFragment.speedMeasurement.setText(getResources().getString(R.string.none));
     }

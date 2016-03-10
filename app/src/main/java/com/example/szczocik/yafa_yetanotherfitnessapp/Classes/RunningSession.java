@@ -23,8 +23,9 @@ public class RunningSession {
     private float avgSpeed;
     private ArrayList<Float> speed = new ArrayList<>();
     private float distance;
+    private int sessionId;
 
-    private String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    private String[] days = {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
     String[] months = {"January","February","March","April","May","June",
             "July","August","September","October","November","December"};
 
@@ -32,9 +33,8 @@ public class RunningSession {
         this.startTime = st;
         this.endTime = et;
         this.distance = dist;
-
+        locationList = new ArrayList<>();
     }
-
 
     public RunningSession(Location sl){
         this.startTime = Calendar.getInstance().getTimeInMillis();
@@ -43,7 +43,6 @@ public class RunningSession {
             locationList.add(sl);
         }
         printTime(this.startTime);
-        showLocation(locationList.toString());
     }
 
     public void stop() {
@@ -58,9 +57,6 @@ public class RunningSession {
         Log.d("Click", time);
     }
 
-    public void showLocation(String l) {
-        Log.d("Location", l);
-    }
 
     public void addLocation(Location l) {
         locationList.add(l);
@@ -99,8 +95,6 @@ public class RunningSession {
     }
 
     public String getStartDate() {
-        String start = "&lt;![CDATA[";
-        String end = "]]&gt;";
         Calendar cl = Calendar.getInstance();
         cl.setTimeInMillis(startTime);
         String startDate = days[cl.get(Calendar.DAY_OF_WEEK)] + ", " + cl.get(Calendar.DATE)
@@ -148,4 +142,21 @@ public class RunningSession {
         }
     }
 
+    public String locationListToString() {
+        String list = "";
+
+        for(Location l:locationList) {
+            list += " " + l.toString() + "\n";
+        }
+
+        return list;
+    }
+
+    public int getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(int sessionId) {
+        this.sessionId = sessionId;
+    }
 }

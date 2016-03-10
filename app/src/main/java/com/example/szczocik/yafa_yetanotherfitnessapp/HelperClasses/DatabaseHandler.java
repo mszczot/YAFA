@@ -6,8 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
+import com.google.android.gms.location.LocationListener;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,8 +23,7 @@ import java.util.List;
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     //All static variables
-    private static final int DATABASE_VERSION = 3
-            ;
+    private static final int DATABASE_VERSION = 5;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -71,7 +74,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         onCreate(db);
     }
 
-    public void addSession(RunningSession rs) {
+    public int addSession(RunningSession rs) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -81,16 +84,39 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         values.put(DISTANCE, rs.getDistance());
 
         db.insert(TABLE_SESSIONS, null, values);
+
+        int sessionId;
+
+        String getSessionId = "SELECT " + KEY_ID + " FROM " + TABLE_SESSIONS +
+                " WHERE " + START_TIME + " = " + rs.getStartTime();
+
+        db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(getSessionId, null);
+        cursor.moveToFirst();
+        sessionId = cursor.getInt(0);
+        cursor.close();
+        db.close();
+
+        return sessionId;
+    }
+
+    public void updateSession(RunningSession rs) {
+        String condition = KEY_ID + " = " + rs.getSessionId();
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues newValues = new ContentValues();
+        newValues.put(END_TIME, rs.getEndTime());
+        newValues.put(AVG_SPEED, rs.getAvgSpeed());
+        newValues.put(DISTANCE, rs.getDistance());
+
+        db.update(TABLE_SESSIONS, newValues, condition, null);
+
         db.close();
     }
 
-    public void addLocation(Location loc, long st) {
-        String getSessionId = "SELECT " + KEY_ID + " FROM " + TABLE_SESSIONS +
-                " WHERE " + START_TIME + " = " + st;
+    public void addLocation(Location loc, int sessionId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(getSessionId, null);
-        int sessionId = cursor.getInt(1);
-        cursor.close();
 
         ContentValues values = new ContentValues();
         values.put(LOCATION_LAT, loc.getLatitude());
@@ -120,13 +146,37 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         RunningSession rs;
 
         while (!cursor.isAfterLast()) {
-            rs = new RunningSession(cursor.getLong(1),
-                    cursor.getLong(2), cursor.getFloat(3));
+            rs = new RunningSession(cursor.getLong(cursor.getColumnIndex(START_TIME)),
+                    cursor.getLong(cursor.getColumnIndex(END_TIME)),
+                    cursor.getFloat(cursor.getColumnIndex(DISTANCE)));
             rsList.add(rs);
             cursor.moveToNext();
         }
         cursor.close();
 
         return  rsList;
+    }
+
+    public ArrayList<LocationObject> getLocations(){
+        ArrayList<LocationObject> locList = new ArrayList<>();
+        LocationObject loc;
+
+        String getLocations = "SELECT * FROM " + TABLE_LOCATIONS;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(getLocations, null);
+        cursor.moveToFirst();
+
+        while (!cursor.isAfterLast()) {
+            loc = new LocationObject();
+            loc.setSessionId(cursor.getInt(cursor.getColumnIndex(SESSION_ID)));
+            loc.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
+            loc.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
+
+            locList.add(loc);
+            cursor.moveToNext();
+        }
+
+        return locList;
     }
 }
