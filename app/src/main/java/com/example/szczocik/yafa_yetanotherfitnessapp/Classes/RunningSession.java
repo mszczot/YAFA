@@ -1,11 +1,8 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Classes;
 
 import android.location.Location;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.RunningFragment;
-
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -14,18 +11,17 @@ import java.util.Calendar;
 /**
  * Created by szczocik on 09/03/16.
  */
-public class RunningSession {
+public class RunningSession implements Serializable {
 
     /**
      * Variables
      */
     private long startTime;
     private long endTime;
-    private ArrayList<LocationObject> locObjList;
-    private float currentSpeed;
+    private ArrayList<Location> locList;
     private float avgSpeed;
-    private ArrayList<Float> speed = new ArrayList<>();
-    private float distance;
+    private float speed;
+    private float distance = 0;
     private int sessionId;
 
     private String[] days = {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
@@ -41,12 +37,12 @@ public class RunningSession {
         this.endTime = et;
         this.distance = dist;
         this.sessionId = sId;
-        this.locObjList = new ArrayList<>();
+        this.locList = new ArrayList<>();
     }
 
     public RunningSession() {
         this.startTime = Calendar.getInstance().getTimeInMillis();
-        this.locObjList = new ArrayList<>();
+        this.locList = new ArrayList<>();
     }
 
     /**
@@ -56,32 +52,15 @@ public class RunningSession {
         this.endTime = Calendar.getInstance().getTimeInMillis();
     }
 
-    public void addLocation(LocationObject l) {
-        l.setSessionId(this.sessionId);
-        locObjList.add(l.getSeqOrder(), l);
-        if (locObjList.size() >= 2) {
-            this.distance = (float) l.distHaversine(locObjList.get(l.getSeqOrder() - 1));
+    public void addLocation(Location l) {
+        locList.add(l);
+        if (l.hasSpeed()) {
+            this.speed = l.getSpeed();
         }
-    }
-
-    public float calculateCurrentSpeed() {
-        currentSpeed = 0;
-        if (locObjList.size() > 2) {
-            LocationObject l1 = locObjList.get(locObjList.size()-1);
-            LocationObject l2 = locObjList.get(locObjList.size());
-            //TODO calculate current speed
+        if (locList.size() >= 2) {
+            this.distance += l.distanceTo(locList.get(locList.size()-2));
         }
-        return currentSpeed;
-    }
-
-    public float getAverageSpeed() {
-        float sum = 0;
-        if (speed != null) {
-            for (int i=0;i<speed.size();i++) {
-                sum += speed.get(i);
-            }
-        }
-        return sum/speed.size();
+        calculateAvgSpeed();
     }
 
     public String getStartDate() {
@@ -105,12 +84,9 @@ public class RunningSession {
         return totalTime;
     }
 
-    public void calculateDistance() {
-        if (locObjList.size() >= 2) {
-            for (int i = 0; i < locObjList.size() - 1; i++) {
-                this.distance += locObjList.get(i).distanceTo(locObjList.get(i + 1));
-            }
-        }
+    private void calculateAvgSpeed(){
+        Calendar cl = Calendar.getInstance();
+        this.avgSpeed = this.distance/(cl.getTimeInMillis()-this.startTime);
     }
 
     private String getDayEnd(int day) {
@@ -137,14 +113,6 @@ public class RunningSession {
         this.sessionId = sessionId;
     }
 
-    public ArrayList<LocationObject> getLocObjList() {
-        return locObjList;
-    }
-
-    public void setLocObjList(ArrayList<LocationObject> locObjList) {
-        this.locObjList = locObjList;
-    }
-
     public float getDistance() {
         return this.distance;
     }
@@ -159,5 +127,17 @@ public class RunningSession {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public ArrayList<Location> getLocList() {
+        return locList;
+    }
+
+    public void setLocList(ArrayList<Location> locList) {
+        this.locList = locList;
+    }
+
+    public float getSpeed() {
+        return speed;
     }
 }

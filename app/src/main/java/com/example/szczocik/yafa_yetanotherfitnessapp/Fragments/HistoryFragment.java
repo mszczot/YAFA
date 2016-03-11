@@ -11,11 +11,10 @@ import android.widget.ListView;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.SessionsList;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,7 +24,7 @@ import java.util.ArrayList;
  * Use the {@link HistoryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HistoryFragment extends Fragment {
+public class HistoryFragment extends Fragment implements Serializable {
 
     DatabaseHandler db;
 

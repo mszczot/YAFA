@@ -7,15 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.util.Log;
-import android.widget.Toast;
-
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
-import com.google.android.gms.location.LocationListener;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by szczocik on 09/03/16.
@@ -23,7 +17,7 @@ import java.util.List;
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     //All static variables
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 13;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -115,26 +109,15 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         db.close();
     }
 
-    public void addLocation(LocationObject loc) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(LOCATION_LAT, loc.getLatitude());
-        values.put(LOCATION_LONG, loc.getLongitude());
-        values.put(SESSION_ID, loc.getSessionId());
-        db.insert(TABLE_LOCATIONS, null, values);
-        db.close();
-    }
-
-    public void addLocationsFromList(ArrayList<LocationObject> locList) {
+    public void addLocationsFromList(ArrayList<Location> locList, int rsId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
 
-        for (LocationObject l:locList) {
+        for (Location l:locList) {
             values.put(LOCATION_LONG,l.getLongitude());
             values.put(LOCATION_LAT, l.getLatitude());
-            values.put(SESSION_ID, l.getSessionId());
+            values.put(SESSION_ID, rsId);
             Log.d("Adding locations", values.toString());
             db.insert(TABLE_LOCATIONS, null, values);
         }
@@ -165,7 +148,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
                     cursor.getLong(cursor.getColumnIndex(END_TIME)),
                     cursor.getFloat(cursor.getColumnIndex(DISTANCE)),
                     cursor.getInt(cursor.getColumnIndex(KEY_ID)));
-            rs.setLocObjList(getLocationsForSession(rs.getSessionId()));
+            rs.setLocList(getLocationsForSession(rs.getSessionId()));
             rsList.add(rs);
             cursor.moveToNext();
         }
@@ -174,9 +157,8 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         return  rsList;
     }
 
-    public ArrayList<LocationObject> getLocations(){
-        ArrayList<LocationObject> locList = new ArrayList<>();
-        LocationObject loc;
+    public ArrayList<Location> getLocations(){
+        ArrayList<Location> locList = new ArrayList<>();
 
         String getLocations = "SELECT * FROM " + TABLE_LOCATIONS;
         Log.d("DBHelper", getLocations);
@@ -184,15 +166,14 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(getLocations, null);
         cursor.moveToFirst();
+        Location l;
 
         while (!cursor.isAfterLast()) {
-            loc = new LocationObject();
-            loc.setSessionId(cursor.getInt(cursor.getColumnIndex(SESSION_ID)));
-            loc.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
-            loc.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LONG)));
-            Log.d("Loop",loc.toString());
+            l = new Location("");
+            l.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
+            l.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LONG)));
 
-            locList.add(loc);
+            locList.add(l);
             cursor.moveToNext();
         }
         Log.d("all locations", locList.toString());
@@ -200,9 +181,9 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         return locList;
     }
 
-    private ArrayList<LocationObject> getLocationsForSession(int sessionId) {
-        ArrayList<LocationObject> locList = new ArrayList<>();
-        LocationObject loc;
+    private ArrayList<Location> getLocationsForSession(int sessionId) {
+        ArrayList<Location> locList = new ArrayList<>();
+        Location loc;
 
         String getLocations = "SELECT * FROM " + TABLE_LOCATIONS + " WHERE " +
                 SESSION_ID + " = " + sessionId;
@@ -213,8 +194,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         cursor.moveToFirst();
 
         while (!cursor.isAfterLast()) {
-            loc = new LocationObject();
-            loc.setSessionId(cursor.getInt(cursor.getColumnIndex(SESSION_ID)));
+            loc = new Location("");
             loc.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
             loc.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LONG)));
 

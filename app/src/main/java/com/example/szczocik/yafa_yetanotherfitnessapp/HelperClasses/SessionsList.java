@@ -13,10 +13,13 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
+import java.io.Serializable;
+
 /**
  * Created by szczocik on 09/03/16.
  */
-public class SessionsList extends ArrayAdapter<RunningSession> {
+public class SessionsList extends ArrayAdapter<RunningSession>
+    implements Serializable {
 
     private final Activity context;
     LocationHandler lh;
@@ -39,7 +42,9 @@ public class SessionsList extends ArrayAdapter<RunningSession> {
         Spanned sp = Html.fromHtml(lh.getRSFromList(lh.getRSListSize() - 1 - position).getStartDate());
         date.setText(sp);
 
-        distance.setText(String.valueOf(lh.getRSFromList(lh.getRSListSize() - 1 - position).getDistance()));
+        distance.setText(String.format("%.3f", lh.getRSFromList(lh.getRSListSize() - 1 - position).getDistance())
+                            + " km");
+
         totalTime.setText(lh.getRSFromList(lh.getRSListSize() - 1 - position).getTotalTime());
 
         return rowView;

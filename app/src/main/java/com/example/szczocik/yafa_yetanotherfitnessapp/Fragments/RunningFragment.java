@@ -10,12 +10,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
@@ -43,13 +41,14 @@ import com.google.android.gms.maps.model.LatLng;
  */
 public class RunningFragment extends Fragment
         implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener,
-        LocationListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
 
-
+    private static final int LOCATION_UPDATE_INTERVAL = 10 * 1000; //10 seconds
+    private static final int LOCATION_UPDATE_FASTEST_INTERVAL = 3 * 1000; //3 seconds
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    //Database handler object
-    DatabaseHandler db;
+
     LocationHandler locationHandler;
 
     protected boolean isInSession = false;
@@ -60,10 +59,9 @@ public class RunningFragment extends Fragment
     TimerFragment timerFragment;
 
     GoogleMap mMap;
-
     GoogleApiClient googleApiClient;
-
     LocationRequest locationRequest;
+
 
 
     public RunningFragment() {
@@ -112,6 +110,9 @@ public class RunningFragment extends Fragment
         mapFragment.getMapAsync(this);
 
         locationRequest = new LocationRequest();
+        locationRequest.setInterval(LOCATION_UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(LOCATION_UPDATE_FASTEST_INTERVAL);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         googleApiClient = new GoogleApiClient
                 .Builder(getContext())
@@ -127,7 +128,7 @@ public class RunningFragment extends Fragment
         UiSettings settings = mMap.getUiSettings();
         settings.setAllGesturesEnabled(false);
         settings.setCompassEnabled(true);
-        settings.setMyLocationButtonEnabled(true);
+        settings.setMyLocationButtonEnabled(false);
         settings.setRotateGesturesEnabled(false);
         settings.setScrollGesturesEnabled(false);
         settings.setTiltGesturesEnabled(false);
@@ -186,12 +187,21 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
+        updateMap(location);
+        locationHandler.addLocationToSession(location);
+        if (locationHandler.isInSession()) {
+            updateUI();
+        }
+    }
+
+    private void updateMap(Location location){
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
+    }
 
-        locationHandler.addLocationToSession(location);
-
-//        timerFragment.speedMeasurement.setText(String.valueOf(locationHandler.getCurrentSpeed()));
+    private void updateUI() {
+        timerFragment.speedMeasurement.setText(String.format("%.2f", locationHandler.getCurrentSpeed()));
+        timerFragment.avgSpeedTV.setText(String.format("%.2f", locationHandler.getCurrentAvgSpeed()));
     }
 
     @Override
@@ -256,11 +266,26 @@ public class RunningFragment extends Fragment
         }
     }
 
-    public void startSession(){
+    public void startSession() {
         locationHandler.startSession();
         timerFragment.resetChronometer();
         timerFragment.startChronometer();
-        //test(runningSession);
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        if (LocationServices.FusedLocationApi.getLastLocation(googleApiClient) != null) {
+            locationHandler.addLocationToSession(LocationServices.FusedLocationApi.getLastLocation(googleApiClient));
+        }
     }
 
     public void stopSession(){
@@ -268,44 +293,4 @@ public class RunningFragment extends Fragment
         timerFragment.stopChronometer();
         timerFragment.speedMeasurement.setText(getResources().getString(R.string.none));
     }
-
-//    private void test(RunningSession rs){
-//        LocationObject loc;
-//        loc = new LocationObject();
-//        loc.setLongitude((float)-3.160426);
-//        loc.setLatitude((float) 55.963198);
-//        rs.addLocation(loc);
-//        loc.setSessionId(rs.getSessionId());
-//        db.addLocation(loc);
-//
-//        loc = new LocationObject();
-//        loc.setLongitude((float)-3.159938);
-//        loc.setLatitude((float) 55.962880);
-//        rs.addLocation(loc);
-//        loc.setSessionId(rs.getSessionId());
-//        db.addLocation(loc);
-//
-//        loc = new LocationObject();
-//        loc.setLongitude((float)-3.159359);
-//        loc.setLatitude((float) 55.962507);
-//        rs.addLocation(loc);
-//        loc.setSessionId(rs.getSessionId());
-//        db.addLocation(loc);
-//
-//
-//        loc = new LocationObject();
-//        loc.setLongitude((float)-3.158865);
-//        loc.setLatitude((float)55.961958);
-//        rs.addLocation(loc);
-//        loc.setSessionId(rs.getSessionId());
-//        db.addLocation(loc);
-//
-//        loc = new LocationObject();
-//        loc.setLongitude((float)-3.158126);
-//        loc.setLatitude((float)55.960627);
-//        rs.addLocation(loc);
-//        loc.setSessionId(rs.getSessionId());
-//        db.addLocation(loc);
-//    }
-
 }

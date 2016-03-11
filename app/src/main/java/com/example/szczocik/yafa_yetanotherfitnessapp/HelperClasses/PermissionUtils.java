@@ -14,10 +14,12 @@ import android.widget.Toast;
 import com.example.szczocik.yafa_yetanotherfitnessapp.MainActivity;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
+import java.io.Serializable;
+
 /**
  * Created by szczocik on 09/03/16.
  */
-public class PermissionUtils {
+public class PermissionUtils implements Serializable {
 
     /**
      * Requests the fine location permission. If a rationale with an additional explanation should

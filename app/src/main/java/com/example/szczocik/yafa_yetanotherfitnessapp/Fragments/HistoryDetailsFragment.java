@@ -1,64 +1,75 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 
 import android.content.Context;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Chronometer;
-import android.widget.TextView;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
-
-import java.io.Serializable;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link TimerFragment.OnFragmentInteractionListener} interface
+ * {@link HistoryDetailsFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link TimerFragment#newInstance} factory method to
+ * Use the {@link HistoryDetailsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TimerFragment extends Fragment implements Serializable {
+public class HistoryDetailsFragment extends Fragment implements OnMapReadyCallback {
 
-    public Chronometer chronometer;
-    public TextView speedMeasurement;
-    public TextView avgSpeedTV;
+    GoogleMap mMap;
+    GoogleApiClient googleApiClient;
+
+    private RunningSession rs;
 
     private OnFragmentInteractionListener mListener;
 
-    public TimerFragment() {
+    public HistoryDetailsFragment() {
         // Required empty public constructor
     }
 
 
-    public static TimerFragment newInstance() {
-        TimerFragment fragment = new TimerFragment();
+    public static HistoryDetailsFragment newInstance(RunningSession rs) {
+        HistoryDetailsFragment fragment = new HistoryDetailsFragment();
+        Bundle args = new Bundle();
+        args.putSerializable("rs", rs);
+        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            rs = (RunningSession) getArguments().getSerializable("rs");
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        super.onCreateView(inflater, container, savedInstanceState);
-        View view = inflater.inflate(R.layout.fragment_timer, container, false);
-        chronometer = (Chronometer) view.findViewById(R.id.chronometer);
-        speedMeasurement = (TextView) view.findViewById(R.id.speedMeasurement);
-        avgSpeedTV = (TextView) view.findViewById(R.id.avgSpeed);
-        return view;
+        return inflater.inflate(R.layout.fragment_history_details, container, false);
     }
 
-
+    @Override
+    public void onViewCreated(View view, Bundle SavedInstanceState) {
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
 
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -83,6 +94,15 @@ public class TimerFragment extends Fragment implements Serializable {
         mListener = null;
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        PolylineOptions po = new PolylineOptions();
+        for (Location l:rs.getLocList()) {
+            po.add(new LatLng(l.getLatitude(),l.getLongitude()));
+        }
+        mMap.addPolyline(po);
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -96,21 +116,5 @@ public class TimerFragment extends Fragment implements Serializable {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
-    }
-
-    public void startChronometer() {
-        chronometer.start();
-    }
-
-    public void stopChronometer() {
-        chronometer.stop();
-    }
-
-    public void resetChronometer() {
-        chronometer.setBase(SystemClock.elapsedRealtime());
-    }
-
-    public void updateSpeed(float speed){
-        speedMeasurement.setText(String.valueOf(speed));
     }
 }

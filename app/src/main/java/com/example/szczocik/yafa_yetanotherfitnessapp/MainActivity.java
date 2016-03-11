@@ -18,16 +18,21 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryDetailsFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.RunningFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.TimerFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 
+import java.io.Serializable;
+
 public class MainActivity extends AppCompatActivity
     implements RunningFragment.OnFragmentInteractionListener,
         TimerFragment.OnFragmentInteractionListener,
-        HistoryFragment.OnFragmentInteractionListener {
+        HistoryFragment.OnFragmentInteractionListener,
+        HistoryDetailsFragment.OnFragmentInteractionListener,
+        Serializable {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -156,7 +161,8 @@ public class MainActivity extends AppCompatActivity
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
      */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+    public class SectionsPagerAdapter extends FragmentPagerAdapter
+        implements Serializable {
 
         public HistoryFragment historyFragment;
 
@@ -170,7 +176,7 @@ public class MainActivity extends AppCompatActivity
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch(position) {
                 case 0:
-                    return PlaceholderFragment.newInstance(position + 1);
+                    return HistoryDetailsFragment.newInstance(locationHandler.getRSFromList(1));
                 case 1:
                     return RunningFragment.newInstance(locationHandler);
                 case 2:
