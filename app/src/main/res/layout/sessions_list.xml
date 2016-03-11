@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:layout_marginLeft="10dp"
-    android:layout_marginRight="10dp">
+    android:layout_marginRight="10dp"
+    android:layout_marginBottom="15dp">
 
     <LinearLayout
         android:layout_width="500dp"
@@ -26,32 +27,51 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="2dp">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:orientation="horizontal">
 
-        <ImageView
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:src="@drawable/distanceicon"
-            android:scaleType="fitXY"
-            />
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/distanceicon"
+                android:scaleType="fitXY"
+                android:layout_marginRight="10dp"/>
 
-        <TextView
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:id="@+id/distance"
-            />
+            <TextView
+                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:id="@+id/distance"
+                android:gravity="center_vertical"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
 
-        <ImageView
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:src="@drawable/stopwatchicon"
-            android:scaleType="fitXY"
-            />
+        </LinearLayout>
 
-        <TextView
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:id="@+id/totalTime"/>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:orientation="horizontal">
 
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/stopwatchicon"
+                android:scaleType="fitXY"
+                android:layout_marginRight="10dp"/>
+
+            <TextView
+                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:gravity="center_vertical"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                android:id="@+id/totalTime"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 

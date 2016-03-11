@@ -16,9 +16,12 @@ import java.util.Calendar;
  */
 public class RunningSession {
 
+    /**
+     * Variables
+     */
     private long startTime;
     private long endTime;
-    private ArrayList<Location> locationList;
+    private ArrayList<LocationObject> locObjList;
     private float currentSpeed;
     private float avgSpeed;
     private ArrayList<Float> speed = new ArrayList<>();
@@ -29,49 +32,44 @@ public class RunningSession {
     String[] months = {"January","February","March","April","May","June",
             "July","August","September","October","November","December"};
 
-    public RunningSession(long st, long et, float dist) {
+
+    /**
+     * Constructors
+     */
+    public RunningSession(long st, long et, float dist, int sId) {
         this.startTime = st;
         this.endTime = et;
         this.distance = dist;
-        locationList = new ArrayList<>();
+        this.sessionId = sId;
+        this.locObjList = new ArrayList<>();
     }
 
-    public RunningSession(Location sl){
+    public RunningSession() {
         this.startTime = Calendar.getInstance().getTimeInMillis();
-        locationList = new ArrayList<>();
-        if (sl != null) {
-            locationList.add(sl);
-        }
-        printTime(this.startTime);
+        this.locObjList = new ArrayList<>();
     }
 
+    /**
+     * public Methods
+     */
     public void stop() {
         this.endTime = Calendar.getInstance().getTimeInMillis();
-        printTime(this.endTime);
     }
 
-    public void printTime(long t){
-        Calendar cl = Calendar.getInstance();
-        cl.setTimeInMillis(t);
-        String time = "" + cl.get(Calendar.HOUR_OF_DAY) + ":" + cl.get(Calendar.MINUTE);
-        Log.d("Click", time);
-    }
-
-
-    public void addLocation(Location l) {
-        locationList.add(l);
-        Log.d("Location", locationList.toString());
-        speed.add(l.getSpeed());
+    public void addLocation(LocationObject l) {
+        l.setSessionId(this.sessionId);
+        locObjList.add(l.getSeqOrder(), l);
+        if (locObjList.size() >= 2) {
+            this.distance = (float) l.distHaversine(locObjList.get(l.getSeqOrder() - 1));
+        }
     }
 
     public float calculateCurrentSpeed() {
         currentSpeed = 0;
-        if (locationList.size() > 2) {
-            Location l1 = locationList.get(locationList.size()-1);
-            Location l2 = locationList.get(locationList.size());
-
-            float dist = l1.distanceTo(locationList.get(locationList.size()));
-            currentSpeed = dist/(l1.getTime() - l2.getTime());
+        if (locObjList.size() > 2) {
+            LocationObject l1 = locObjList.get(locObjList.size()-1);
+            LocationObject l2 = locObjList.get(locObjList.size());
+            //TODO calculate current speed
         }
         return currentSpeed;
     }
@@ -86,24 +84,12 @@ public class RunningSession {
         return sum/speed.size();
     }
 
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
     public String getStartDate() {
         Calendar cl = Calendar.getInstance();
         cl.setTimeInMillis(startTime);
         String startDate = days[cl.get(Calendar.DAY_OF_WEEK)] + ", " + cl.get(Calendar.DATE)
                 + getDayEnd(cl.get(Calendar.DATE)) + " of " + months[cl.get(Calendar.MONTH)];
         return startDate;
-    }
-
-    public float getAvgSpeed() {
-        return avgSpeed;
     }
 
     public String getTotalTime() {
@@ -120,13 +106,11 @@ public class RunningSession {
     }
 
     public void calculateDistance() {
-        if (locationList != null) {
-            distance = locationList.get(0).distanceTo(locationList.get(locationList.size()-1));
+        if (locObjList.size() >= 2) {
+            for (int i = 0; i < locObjList.size() - 1; i++) {
+                this.distance += locObjList.get(i).distanceTo(locObjList.get(i + 1));
+            }
         }
-    }
-
-    public float getDistance() {
-        return this.distance;
     }
 
     private String getDayEnd(int day) {
@@ -142,21 +126,38 @@ public class RunningSession {
         }
     }
 
-    public String locationListToString() {
-        String list = "";
-
-        for(Location l:locationList) {
-            list += " " + l.toString() + "\n";
-        }
-
-        return list;
-    }
-
+    /**
+     * Setters and getters
+     */
     public int getSessionId() {
         return sessionId;
     }
 
     public void setSessionId(int sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public ArrayList<LocationObject> getLocObjList() {
+        return locObjList;
+    }
+
+    public void setLocObjList(ArrayList<LocationObject> locObjList) {
+        this.locObjList = locObjList;
+    }
+
+    public float getDistance() {
+        return this.distance;
+    }
+
+    public float getAvgSpeed() {
+        return avgSpeed;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 }

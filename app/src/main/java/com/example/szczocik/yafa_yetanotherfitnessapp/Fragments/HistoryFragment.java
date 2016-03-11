@@ -3,16 +3,15 @@ package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
-import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.SessionsList;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
@@ -34,14 +33,18 @@ public class HistoryFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    public SessionsList adapter;
+
+    private LocationHandler lh;
+
     public HistoryFragment() {
         // Required empty public constructor
     }
 
-    public static HistoryFragment newInstance(DatabaseHandler db) {
+    public static HistoryFragment newInstance(LocationHandler lh) {
         HistoryFragment fragment = new HistoryFragment();
         Bundle args = new Bundle();
-        args.putSerializable("DatabaseHandler", db);
+        args.putSerializable("LocationHandler", lh);
         fragment.setArguments(args);
         return fragment;
     }
@@ -50,7 +53,7 @@ public class HistoryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            db = (DatabaseHandler) getArguments().getSerializable("DatabaseHandler");
+            lh = (LocationHandler) getArguments().getSerializable("LocationHandler");
         }
     }
 
@@ -63,9 +66,7 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        ArrayList<RunningSession> rsList = db.getSessions();
-        ArrayList<LocationObject> locList = db.getLocations();
-        SessionsList adapter = new SessionsList(getActivity(), R.layout.sessions_list, rsList, locList  );
+        adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh);
 
         list = (ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);

@@ -3,6 +3,7 @@ package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
@@ -16,8 +17,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
-import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.PermissionUtils;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 import com.google.android.gms.common.ConnectionResult;
@@ -49,15 +50,14 @@ public class RunningFragment extends Fragment
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     //Database handler object
     DatabaseHandler db;
+    LocationHandler locationHandler;
 
-    RunningSession runningSession;
     protected boolean isInSession = false;
 
     private OnFragmentInteractionListener mListener;
 
     Button startButton;
     TimerFragment timerFragment;
-    Location mlocation;
 
     GoogleMap mMap;
 
@@ -71,10 +71,10 @@ public class RunningFragment extends Fragment
     }
 
     // TODO: Rename and change types and number of parameters
-    public static RunningFragment newInstance(DatabaseHandler db) {
+    public static RunningFragment newInstance(LocationHandler lh) {
         RunningFragment fragment = new RunningFragment();
         Bundle args = new Bundle();
-        args.putSerializable("db", db);
+        args.putSerializable("lh", lh);
         fragment.setArguments(args);
         return fragment;
     }
@@ -83,7 +83,7 @@ public class RunningFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            db = (DatabaseHandler) getArguments().getSerializable("db");
+            locationHandler = (LocationHandler) getArguments().getSerializable("lh");
         }
     }
 
@@ -121,8 +121,6 @@ public class RunningFragment extends Fragment
                 .build();
 
         googleApiClient.connect();
-
-        runningSession = new RunningSession(mlocation);
     }
 
     public void setupMapSettings() {
@@ -153,7 +151,6 @@ public class RunningFragment extends Fragment
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-        Toast.makeText(context, String.valueOf(this.getId()), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -189,30 +186,33 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(getActivity(), location.toString(), Toast.LENGTH_LONG).show();
-        this.mlocation = location;
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
-        addLocation(location);
-        if (isInSession) {
-            if (location.hasSpeed()) {
-                timerFragment.speedMeasurement.setText(String.valueOf(location.getSpeed()));
-            } else {
-                timerFragment.speedMeasurement.setText(String.valueOf(runningSession.calculateCurrentSpeed()));
-            }
-            timerFragment.avgSpeedTV.setText(String.valueOf(runningSession.getAverageSpeed()));
 
-            db.addLocation(location, runningSession.getSessionId());
-        }
+        locationHandler.addLocationToSession(location);
+
+//        timerFragment.speedMeasurement.setText(String.valueOf(locationHandler.getCurrentSpeed()));
     }
 
     @Override
     public void onConnected(Bundle bundle) {
-        Log.d("Position Tracker", "Google APi Client connected");
         requestLocationUpdates();
     }
 
     public void requestLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 googleApiClient, locationRequest, this);
     }
@@ -257,21 +257,55 @@ public class RunningFragment extends Fragment
     }
 
     public void startSession(){
-        runningSession = new RunningSession(mlocation);
+        locationHandler.startSession();
         timerFragment.resetChronometer();
         timerFragment.startChronometer();
-        runningSession.setSessionId(db.addSession(runningSession));
+        //test(runningSession);
     }
 
     public void stopSession(){
-        runningSession.stop();
-        runningSession.calculateDistance();
-        db.updateSession(runningSession);
+        locationHandler.stopSession();
         timerFragment.stopChronometer();
         timerFragment.speedMeasurement.setText(getResources().getString(R.string.none));
     }
 
-    public void addLocation(Location location) {
-        runningSession.addLocation(location);
-    }
+//    private void test(RunningSession rs){
+//        LocationObject loc;
+//        loc = new LocationObject();
+//        loc.setLongitude((float)-3.160426);
+//        loc.setLatitude((float) 55.963198);
+//        rs.addLocation(loc);
+//        loc.setSessionId(rs.getSessionId());
+//        db.addLocation(loc);
+//
+//        loc = new LocationObject();
+//        loc.setLongitude((float)-3.159938);
+//        loc.setLatitude((float) 55.962880);
+//        rs.addLocation(loc);
+//        loc.setSessionId(rs.getSessionId());
+//        db.addLocation(loc);
+//
+//        loc = new LocationObject();
+//        loc.setLongitude((float)-3.159359);
+//        loc.setLatitude((float) 55.962507);
+//        rs.addLocation(loc);
+//        loc.setSessionId(rs.getSessionId());
+//        db.addLocation(loc);
+//
+//
+//        loc = new LocationObject();
+//        loc.setLongitude((float)-3.158865);
+//        loc.setLatitude((float)55.961958);
+//        rs.addLocation(loc);
+//        loc.setSessionId(rs.getSessionId());
+//        db.addLocation(loc);
+//
+//        loc = new LocationObject();
+//        loc.setLongitude((float)-3.158126);
+//        loc.setLatitude((float)55.960627);
+//        rs.addLocation(loc);
+//        loc.setSessionId(rs.getSessionId());
+//        db.addLocation(loc);
+//    }
+
 }

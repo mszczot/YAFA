@@ -21,7 +21,8 @@ import android.widget.TextView;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.RunningFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.TimerFragment;
-import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 
 public class MainActivity extends AppCompatActivity
     implements RunningFragment.OnFragmentInteractionListener,
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity
      * My variables: Database handler
      */
     DatabaseHandler db;
+    LocationHandler locationHandler;
 
     RunningFragment runningFragment;
 
@@ -78,7 +80,13 @@ public class MainActivity extends AppCompatActivity
 
     private void setup() {
         db = new DatabaseHandler(this);
+        locationHandler = new LocationHandler(db, this);
         runningFragment = (RunningFragment) mSectionsPagerAdapter.getItem(1);
+    }
+
+    public void updateList(LocationHandler lh) {
+        mSectionsPagerAdapter.historyFragment.adapter.add(lh.getCurrentSession());
+        mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -150,6 +158,8 @@ public class MainActivity extends AppCompatActivity
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
+        public HistoryFragment historyFragment;
+
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -162,9 +172,10 @@ public class MainActivity extends AppCompatActivity
                 case 0:
                     return PlaceholderFragment.newInstance(position + 1);
                 case 1:
-                    return RunningFragment.newInstance(db);
+                    return RunningFragment.newInstance(locationHandler);
                 case 2:
-                    return HistoryFragment.newInstance(db);
+                    historyFragment = HistoryFragment.newInstance(locationHandler);
+                    return historyFragment;
             }
             return null;
         }
@@ -187,5 +198,7 @@ public class MainActivity extends AppCompatActivity
             }
             return null;
         }
+
+
     }
 }

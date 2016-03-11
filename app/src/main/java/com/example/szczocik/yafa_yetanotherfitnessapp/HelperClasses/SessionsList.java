@@ -9,11 +9,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationObject;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
-
-import java.util.ArrayList;
 
 /**
  * Created by szczocik on 09/03/16.
@@ -21,16 +19,13 @@ import java.util.ArrayList;
 public class SessionsList extends ArrayAdapter<RunningSession> {
 
     private final Activity context;
-    private final ArrayList<RunningSession> rsList;
-    private final ArrayList<LocationObject> locList;
+    LocationHandler lh;
 
 
-    public SessionsList(Activity context, int resource, ArrayList<RunningSession> rsList,
-                        ArrayList<LocationObject> locList) {
-        super(context, resource, rsList);
+    public SessionsList(Activity context, int resource, LocationHandler lh) {
+        super(context, resource, lh.getRsList());
         this.context = context;
-        this.rsList = rsList;
-        this.locList = locList;
+        this.lh = lh;
     }
 
     public View getView(int position, View view, ViewGroup parent) {
@@ -41,19 +36,11 @@ public class SessionsList extends ArrayAdapter<RunningSession> {
         TextView distance = (TextView) rowView.findViewById(R.id.distance);
         TextView totalTime = (TextView) rowView.findViewById(R.id.totalTime);
 
-        Spanned sp = Html.fromHtml(rsList.get(position).getStartDate());
-
-        String t = "";
+        Spanned sp = Html.fromHtml(lh.getRSFromList(lh.getRSListSize() - 1 - position).getStartDate());
         date.setText(sp);
 
-        for (int i=0;i<locList.size();i++) {
-            if (locList.get(i).getSessionId() == rsList.get(position).getSessionId()) {
-                t += locList.get(i).toString();
-            }
-        }
-
-        distance.setText(t);
-        totalTime.setText(rsList.get(position).getTotalTime());
+        distance.setText(String.valueOf(lh.getRSFromList(lh.getRSListSize() - 1 - position).getDistance()));
+        totalTime.setText(lh.getRSFromList(lh.getRSListSize() - 1 - position).getTotalTime());
 
         return rowView;
     }
