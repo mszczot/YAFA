@@ -14,6 +14,7 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * Created by szczocik on 09/03/16.
@@ -22,13 +23,13 @@ public class SessionsList extends ArrayAdapter<RunningSession>
     implements Serializable {
 
     private final Activity context;
-    LocationHandler lh;
+    ArrayList<RunningSession> rsList;
 
 
-    public SessionsList(Activity context, int resource, LocationHandler lh) {
-        super(context, resource, lh.getRsList());
+    public SessionsList(Activity context, int resource, ArrayList<RunningSession> rsList) {
+        super(context, resource, rsList);
         this.context = context;
-        this.lh = lh;
+        this.rsList = rsList;
     }
 
     public View getView(int position, View view, ViewGroup parent) {
@@ -39,13 +40,13 @@ public class SessionsList extends ArrayAdapter<RunningSession>
         TextView distance = (TextView) rowView.findViewById(R.id.distance);
         TextView totalTime = (TextView) rowView.findViewById(R.id.totalTime);
 
-        Spanned sp = Html.fromHtml(lh.getRSFromList(lh.getRSListSize() - 1 - position).getStartDate());
+        Spanned sp = Html.fromHtml(rsList.get(position).getStartDate());
         date.setText(sp);
 
-        distance.setText(String.format("%.3f", lh.getRSFromList(lh.getRSListSize() - 1 - position).getDistance())
+        distance.setText(String.format("%.3f", rsList.get(position).getDistanceInKm())
                             + " km");
 
-        totalTime.setText(lh.getRSFromList(lh.getRSListSize() - 1 - position).getTotalTime());
+        totalTime.setText(rsList.get(position).getTotalTime());
 
         return rowView;
     }

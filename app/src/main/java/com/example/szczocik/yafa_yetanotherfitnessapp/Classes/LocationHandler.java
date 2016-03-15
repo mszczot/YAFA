@@ -1,6 +1,10 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Classes;
 
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.MainActivity;
 
@@ -10,7 +14,7 @@ import java.util.ArrayList;
 /**
  * Created by szczocik on 11/03/16.
  */
-public class LocationHandler implements Serializable {
+public class LocationHandler implements Serializable, Parcelable {
 
     private RunningSession rs;
     private DatabaseHandler db;
@@ -25,8 +29,24 @@ public class LocationHandler implements Serializable {
         this.db = db;
         this.mainActivity = ma;
         rsList = db.getSessions();
-
     }
+
+    protected LocationHandler(Parcel in) {
+        rs = in.readParcelable(RunningSession.class.getClassLoader());
+        rsList = in.createTypedArrayList(RunningSession.CREATOR);
+    }
+
+    public static final Creator<LocationHandler> CREATOR = new Creator<LocationHandler>() {
+        @Override
+        public LocationHandler createFromParcel(Parcel in) {
+            return new LocationHandler(in);
+        }
+
+        @Override
+        public LocationHandler[] newArray(int size) {
+            return new LocationHandler[size];
+        }
+    };
 
     /**
      * public methods
@@ -59,6 +79,14 @@ public class LocationHandler implements Serializable {
         return 0.00;
     }
 
+    public String getPace(){
+        if (rs != null) {
+            return rs.getPaceAsString();
+        } else {
+            return "00:00";
+        }
+    }
+
     public double getCurrentAvgSpeed() {
         if (rs != null) {
             return rs.getAvgSpeed();
@@ -89,6 +117,10 @@ public class LocationHandler implements Serializable {
         return this.rsList;
     }
 
+    public Location getPreviousLocation() {
+        return rs.getLocList().get(rs.getLocList().size() - 2);
+    }
+
 
     /**
      * Private methods
@@ -97,4 +129,14 @@ public class LocationHandler implements Serializable {
         mainActivity.updateList(this);
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(rs, flags);
+        dest.writeTypedList(rsList);
+    }
 }

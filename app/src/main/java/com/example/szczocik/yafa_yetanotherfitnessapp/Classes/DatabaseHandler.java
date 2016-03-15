@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     //All static variables
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 20;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -31,6 +31,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     private static final String END_TIME = "end_time";
     private static final String AVG_SPEED = "avg_speed";
     private static final String DISTANCE = "dist";
+    private static final String MAX_SPEED = "max_speed";
+    private static final String ELEVATION_GAIN = "elevation_gain";
+    private static final String ELEVATION_LOSS = "elevation_loss";
+    private static final String PACE = "pace";
 
     /**
      * Table for storing locations
@@ -42,6 +46,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     private static final String LOCATION_LONG = "loc_long";
     private static final String LOCATION_LAT = "loc_lat";
     private static final String SESSION_ID = "session_id";
+    private static final String ALTITUDE = "altitude";
 
 
     public DatabaseHandler(Context context) {
@@ -52,11 +57,14 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TABLE_SESSIONS = "CREATE TABLE " + TABLE_SESSIONS + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + START_TIME + " INTEGER,"
-                + END_TIME + " INTEGER," + AVG_SPEED + " REAL, " + DISTANCE + " REAL)";
+                + END_TIME + " INTEGER," + AVG_SPEED + " REAL, " + DISTANCE + " REAL, "
+                + MAX_SPEED + " REAL, " + ELEVATION_GAIN + " REAL, " + ELEVATION_LOSS
+                + " REAL, " + PACE + " REAL)";
         db.execSQL(CREATE_TABLE_SESSIONS);
         String CREATE_TABLE_LOCATIONS = "CREATE TABLE " + TABLE_LOCATIONS + "("
                 + LOCATION_ID + " INTEGER PRIMARY KEY," + LOCATION_LAT + " REAL,"
-                + LOCATION_LONG + " REAL, " + SESSION_ID + " INTEGER)";
+                + LOCATION_LONG + " REAL, " + SESSION_ID + " INTEGER " + ALTITUDE
+                + " REAL)";
         db.execSQL(CREATE_TABLE_LOCATIONS);
     }
 
@@ -72,22 +80,23 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(START_TIME, rs.getStartTime());
+        values.put(START_TIME, rs.getLongStartTime());
         values.put(END_TIME, rs.getEndTime());
         values.put(AVG_SPEED, rs.getAvgSpeed());
         values.put(DISTANCE, rs.getDistance());
+        values.put(MAX_SPEED, rs.getMaxSpeed());
 
         db.insert(TABLE_SESSIONS, null, values);
 
         int sessionId;
 
         String getSessionId = "SELECT " + KEY_ID + " FROM " + TABLE_SESSIONS +
-                " WHERE " + START_TIME + " = " + rs.getStartTime();
+                " WHERE " + START_TIME + " = " + rs.getLongStartTime();
 
         db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(getSessionId, null);
         cursor.moveToFirst();
-        sessionId = cursor.getInt(0);
+        sessionId = cursor.getInt(cursor.getColumnIndex(KEY_ID));
         cursor.close();
         db.close();
 
@@ -103,6 +112,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         newValues.put(END_TIME, rs.getEndTime());
         newValues.put(AVG_SPEED, rs.getAvgSpeed());
         newValues.put(DISTANCE, rs.getDistance());
+        newValues.put(MAX_SPEED, rs.getMaxSpeed());
+        newValues.put(ELEVATION_GAIN, rs.getElevationGain());
+        newValues.put(ELEVATION_LOSS, rs.getElevationLoss());
+        newValues.put(PACE, rs.getPace());
 
         db.update(TABLE_SESSIONS, newValues, condition, null);
 
@@ -118,6 +131,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
             values.put(LOCATION_LONG,l.getLongitude());
             values.put(LOCATION_LAT, l.getLatitude());
             values.put(SESSION_ID, rsId);
+            values.put(ALTITUDE, l.getAltitude());
             Log.d("Adding locations", values.toString());
             db.insert(TABLE_LOCATIONS, null, values);
         }
@@ -136,7 +150,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     }
 
     public ArrayList<RunningSession> getSessions() {
-        String getSessions = "SELECT * FROM " + TABLE_SESSIONS;
+        String getSessions = "SELECT * FROM " + TABLE_SESSIONS + " ORDER BY " + KEY_ID + " DESC";
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(getSessions, null);
         cursor.moveToFirst();
@@ -149,6 +163,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
                     cursor.getFloat(cursor.getColumnIndex(DISTANCE)),
                     cursor.getInt(cursor.getColumnIndex(KEY_ID)));
             rs.setLocList(getLocationsForSession(rs.getSessionId()));
+            rs.setMaxSpeed(cursor.getFloat(cursor.getColumnIndex(MAX_SPEED)));
+            rs.setElevationGain(cursor.getFloat(cursor.getColumnIndex(ELEVATION_GAIN)));
+            rs.setElevationLoss(cursor.getFloat(cursor.getColumnIndex(ELEVATION_LOSS)));
+            rs.setPace(cursor.getFloat(cursor.getColumnIndex(PACE)));
             rsList.add(rs);
             cursor.moveToNext();
         }
@@ -197,7 +215,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
             loc = new Location("");
             loc.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
             loc.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LONG)));
-
+            loc.setAltitude(cursor.getDouble(cursor.getColumnIndex(ALTITUDE )));
             locList.add(loc);
             cursor.moveToNext();
         }

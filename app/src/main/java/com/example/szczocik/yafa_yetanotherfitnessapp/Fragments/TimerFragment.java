@@ -26,7 +26,7 @@ import java.io.Serializable;
 public class TimerFragment extends Fragment implements Serializable {
 
     public Chronometer chronometer;
-    public TextView speedMeasurement;
+    public TextView pace;
     public TextView avgSpeedTV;
 
     private OnFragmentInteractionListener mListener;
@@ -53,7 +53,7 @@ public class TimerFragment extends Fragment implements Serializable {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         chronometer = (Chronometer) view.findViewById(R.id.chronometer);
-        speedMeasurement = (TextView) view.findViewById(R.id.speedMeasurement);
+        pace = (TextView) view.findViewById(R.id.pace);
         avgSpeedTV = (TextView) view.findViewById(R.id.avgSpeed);
         return view;
     }
@@ -110,7 +110,7 @@ public class TimerFragment extends Fragment implements Serializable {
         chronometer.setBase(SystemClock.elapsedRealtime());
     }
 
-    public void updateSpeed(float speed){
-        speedMeasurement.setText(String.valueOf(speed));
+    public void updatePace(String speed){
+        pace.setText(speed);
     }
 }

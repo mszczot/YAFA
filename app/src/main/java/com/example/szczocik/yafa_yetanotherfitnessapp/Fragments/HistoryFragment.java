@@ -1,17 +1,23 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Activities.HistoryDetails;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.SessionsList;
+import com.example.szczocik.yafa_yetanotherfitnessapp.MainActivity;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 
 import java.io.Serializable;
@@ -65,10 +71,20 @@ public class HistoryFragment extends Fragment implements Serializable {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh);
+        adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh.getRsList());
 
         list = (ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);
+
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i = new Intent(getContext(), HistoryDetails.class);
+                RunningSession rs = lh.getRSFromList(position);
+                i.putExtra("rs", rs);
+                startActivity(i);
+            }
+        });
 
     }
 

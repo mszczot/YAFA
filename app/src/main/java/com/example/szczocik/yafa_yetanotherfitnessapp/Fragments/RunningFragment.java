@@ -10,10 +10,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
@@ -30,6 +32,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -45,9 +48,10 @@ public class RunningFragment extends Fragment
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    private static final int LOCATION_UPDATE_INTERVAL = 10 * 1000; //10 seconds
-    private static final int LOCATION_UPDATE_FASTEST_INTERVAL = 3 * 1000; //3 seconds
+    private static final int LOCATION_UPDATE_INTERVAL = 2 * 1000; //10 seconds
+    private static final int LOCATION_UPDATE_FASTEST_INTERVAL = 1 * 1000; //3 seconds
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int ACCURACY = 25;
 
     LocationHandler locationHandler;
 
@@ -62,7 +66,7 @@ public class RunningFragment extends Fragment
     GoogleApiClient googleApiClient;
     LocationRequest locationRequest;
 
-
+    PolylineOptions polyLine;
 
     public RunningFragment() {
         // Required empty public constructor
@@ -166,6 +170,7 @@ public class RunningFragment extends Fragment
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
         setupMapSettings();
+        polyLine = new PolylineOptions();
     }
 
     public void enableMyLocation() {
@@ -187,10 +192,20 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
+        if (location.hasAltitude()) {
+            Toast.makeText(getActivity(), String.valueOf(location.getAltitude()), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getActivity(), "no altitude", Toast.LENGTH_SHORT).show();
+        }
+        Log.d("Accuracy", String.valueOf(location.getAccuracy()));
         updateMap(location);
-        locationHandler.addLocationToSession(location);
-        if (locationHandler.isInSession()) {
-            updateUI();
+        if (location.getAccuracy() <= ACCURACY) {
+            locationHandler.addLocationToSession(location);
+            if (locationHandler.isInSession()) {
+                updateUI();
+                polyLine.add(new LatLng(location.getLatitude(), location.getLongitude()));
+                mMap.addPolyline(polyLine);
+            }
         }
     }
 
@@ -200,7 +215,7 @@ public class RunningFragment extends Fragment
     }
 
     private void updateUI() {
-        timerFragment.speedMeasurement.setText(String.format("%.2f", locationHandler.getCurrentSpeed()));
+        timerFragment.updatePace(locationHandler.getPace());
         timerFragment.avgSpeedTV.setText(String.format("%.2f", locationHandler.getCurrentAvgSpeed()));
     }
 
@@ -291,6 +306,6 @@ public class RunningFragment extends Fragment
     public void stopSession(){
         locationHandler.stopSession();
         timerFragment.stopChronometer();
-        timerFragment.speedMeasurement.setText(getResources().getString(R.string.none));
+        timerFragment.pace.setText(getResources().getString(R.string.none));
     }
 }

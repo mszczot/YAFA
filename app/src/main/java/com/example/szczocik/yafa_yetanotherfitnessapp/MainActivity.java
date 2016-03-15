@@ -18,7 +18,7 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
-import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryDetailsFragment;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.RunningFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.TimerFragment;
@@ -26,12 +26,12 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity
     implements RunningFragment.OnFragmentInteractionListener,
         TimerFragment.OnFragmentInteractionListener,
         HistoryFragment.OnFragmentInteractionListener,
-        HistoryDetailsFragment.OnFragmentInteractionListener,
         Serializable {
 
     /**
@@ -90,7 +90,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void updateList(LocationHandler lh) {
-        mSectionsPagerAdapter.historyFragment.adapter.add(lh.getCurrentSession());
+
+        mSectionsPagerAdapter.historyFragment.adapter.insert(lh.getCurrentSession(), 0);
         mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
     }
 
@@ -165,6 +166,7 @@ public class MainActivity extends AppCompatActivity
         implements Serializable {
 
         public HistoryFragment historyFragment;
+        public Fragment fragment;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -176,7 +178,7 @@ public class MainActivity extends AppCompatActivity
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch(position) {
                 case 0:
-                    return HistoryDetailsFragment.newInstance(locationHandler.getRSFromList(1));
+                    return PlaceholderFragment.newInstance(position + 1);
                 case 1:
                     return RunningFragment.newInstance(locationHandler);
                 case 2:
