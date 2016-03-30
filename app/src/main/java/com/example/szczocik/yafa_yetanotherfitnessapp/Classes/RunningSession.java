@@ -27,11 +27,11 @@ public class RunningSession implements Parcelable {
     private long startTime;
     private long endTime;
     private ArrayList<Location> locList;
-    private float avgSpeed;
+    private float avgSpeed; //miles per hour
     private float speed;
     private float distance = 0; //in meters
     private int sessionId;
-    private float pace;
+    private float pace; //minutes per mile
     private long duration;
     private float maxSpeed = 0;
     private float elevationGain;
@@ -134,6 +134,10 @@ public class RunningSession implements Parcelable {
         long hours = minutes/60;
         long secs = time%60;
 
+        if (minutes == 60) {
+            minutes = 0;
+        }
+
         return f.format(hours) + ":" + f.format(minutes) + ":" + f.format(secs);
     }
 
@@ -175,7 +179,7 @@ public class RunningSession implements Parcelable {
 
     private void calculateAvgSpeed(){
         Calendar cl = Calendar.getInstance();
-        this.avgSpeed = getDistanceInMiles()/(cl.getTimeInMillis()-this.startTime) * 3600000;
+        this.avgSpeed = getDistanceInMiles()/(cl.getTimeInMillis()-this.startTime) * 3600000; //miles per hour
     }
 
     private String getDayEnd(int day) {
@@ -233,6 +237,10 @@ public class RunningSession implements Parcelable {
         return avgSpeed;
     }
 
+    public float getAvgSpeedValue() {
+        return avgSpeed;
+    }
+
     public long getEndTime() {
         return endTime;
     }
@@ -268,6 +276,10 @@ public class RunningSession implements Parcelable {
 //        if (this.pace > 60) {
 //            return 0;
 //        }
+        return pace;
+    }
+
+    public float getPaceValue() {
         return pace;
     }
 
@@ -310,6 +322,26 @@ public class RunningSession implements Parcelable {
 
     public void setElevationGain(float elevationGain) {
         this.elevationGain = elevationGain;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setDistance(float distance) {
+        this.distance = distance;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    public void setAvgSpeed(float avgSpeed) {
+        this.avgSpeed = avgSpeed;
     }
 
     //endregion

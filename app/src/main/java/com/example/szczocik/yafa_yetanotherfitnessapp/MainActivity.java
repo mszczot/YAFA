@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,17 +22,22 @@ import android.widget.TextView;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.HistoryFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.RunningFragment;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.StatisticFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.TimerFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 
+import com.facebook.FacebookSdk;
+
 import java.io.Serializable;
-import java.util.Comparator;
+import java.util.Calendar;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
     implements RunningFragment.OnFragmentInteractionListener,
         TimerFragment.OnFragmentInteractionListener,
         HistoryFragment.OnFragmentInteractionListener,
+        StatisticFragment.OnFragmentInteractionListener,
         Serializable {
 
     /**
@@ -85,7 +91,8 @@ public class MainActivity extends AppCompatActivity
 
     private void setup() {
         db = new DatabaseHandler(this);
-        locationHandler = new LocationHandler(db, this);
+        test(db);
+        locationHandler = locationHandler.getInstance(db, this);
         runningFragment = (RunningFragment) mSectionsPagerAdapter.getItem(1);
     }
 
@@ -95,6 +102,10 @@ public class MainActivity extends AppCompatActivity
         mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
     }
 
+    public void updateListAfterRemoval(RunningSession rs) {
+        mSectionsPagerAdapter.historyFragment.adapter.remove(rs);
+        mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -120,6 +131,42 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFragmentInteraction(Uri uri) {
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onStop();
+    }
+
+    public void test(DatabaseHandler db) {
+        Calendar cl = Calendar.getInstance();
+
+        Random r = new Random();
+
+        RunningSession rs;
+        for (int i =0; i<3; i++) {
+            cl.set(Calendar.DAY_OF_MONTH, 1);
+            Log.d("First", cl.getTime().toString());
+            cl.set(Calendar.MONTH, i);
+            Log.d("Second", cl.getTime().toString());
+            Log.d("Month", String.valueOf(i));
+            for (int j=1; j<cl.getActualMaximum(Calendar.DAY_OF_MONTH); j++) {
+                cl.set(Calendar.DAY_OF_MONTH, j);
+                rs = new RunningSession();
+                cl.set(Calendar.HOUR_OF_DAY, cl.get(Calendar.HOUR_OF_DAY) - 1);
+                rs.setStartTime(cl.getTimeInMillis());
+
+                cl.set(Calendar.HOUR_OF_DAY, cl.get(Calendar.HOUR_OF_DAY) + 1);
+                rs.setEndTime(cl.getTimeInMillis());
+                rs.setPace(r.nextInt(15-5)+5); //random number between 5 and 15
+                rs.setElevationGain(r.nextInt(50-10)+10); //random number between 10 and 50
+                rs.setElevationLoss(r.nextInt(50-10)+10);
+                rs.setAvgSpeed(r.nextInt(10-2)+2); // 2 - 10
+                rs.setDistance(r.nextInt(3000-500)+500); //500 - 3000
+                rs.setMaxSpeed(r.nextInt(15 - 2) + 2);
+                db.addSession(rs);
+            }
+        }
     }
 
 
@@ -176,9 +223,9 @@ public class MainActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            switch(position) {
+            switch (position) {
                 case 0:
-                    return PlaceholderFragment.newInstance(position + 1);
+                    return StatisticFragment.newInstance(locationHandler);
                 case 1:
                     return RunningFragment.newInstance(locationHandler);
                 case 2:

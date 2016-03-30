@@ -1,6 +1,7 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
@@ -10,11 +11,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
@@ -158,6 +161,12 @@ public class RunningFragment extends Fragment
         }
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -192,11 +201,6 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
-        if (location.hasAltitude()) {
-            Toast.makeText(getActivity(), String.valueOf(location.getAltitude()), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getActivity(), "no altitude", Toast.LENGTH_SHORT).show();
-        }
         Log.d("Accuracy", String.valueOf(location.getAccuracy()));
         updateMap(location);
         if (location.getAccuracy() <= ACCURACY) {
@@ -209,7 +213,7 @@ public class RunningFragment extends Fragment
         }
     }
 
-    private void updateMap(Location location){
+    private void updateMap(Location location) {
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
     }
@@ -240,6 +244,10 @@ public class RunningFragment extends Fragment
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 googleApiClient, locationRequest, this);
+    }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
     }
 
     @Override
@@ -273,6 +281,32 @@ public class RunningFragment extends Fragment
             startButton.setBackgroundColor(getResources().getColor(R.color.green));
             startButton.setText(getResources().getString(R.string.start));
             stopSession();
+
+            LayoutInflater inflater = getActivity().getLayoutInflater();
+            View dialogLayout = inflater.inflate(R.layout.session_end_dialog, null);
+
+            TextView dur = (TextView) dialogLayout.findViewById(R.id.durDialog);
+            dur.setText(locationHandler.getDuration());
+
+            Button yes = (Button) dialogLayout.findViewById(R.id.yesButton);
+            yes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    locationHandler.saveCurrentSession();
+                }
+            });
+
+            Button no = (Button) dialogLayout.findViewById(R.id.noButton);
+            no.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    locationHandler.disardCurrentSession();
+                }
+            });
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setView(dialogLayout);
+            builder.show();
         } else {
             isInSession = true;
             startButton.setBackgroundColor(getResources().getColor(R.color.red));
@@ -308,4 +342,5 @@ public class RunningFragment extends Fragment
         timerFragment.stopChronometer();
         timerFragment.pace.setText(getResources().getString(R.string.none));
     }
+
 }

@@ -9,4 +9,7 @@
 
     <dimen name="detailsFontSize">20sp</dimen>
     <dimen name="detailsLargerFontSize">23sp</dimen>
+
+    <dimen name="statisticButtons">40dp</dimen>
+    <dimen name="graphHeight">150dp</dimen>
 </resources>

@@ -27,6 +27,16 @@
     <string name="startTime">Start Time</string>
     <string name="startDate">Date</string>
 
+    <string name="statisticTitle">Distances this month</string>
+    <string name="avgPaceTitle">Average pace this month</string>
+
+    <!-- dialog for ending the session -->
+    <string name="question">Would you like to save this session?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="facebook_app_id">1529085664060705</string>
 </resources>

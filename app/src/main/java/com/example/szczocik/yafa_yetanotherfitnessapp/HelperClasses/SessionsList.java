@@ -43,8 +43,8 @@ public class SessionsList extends ArrayAdapter<RunningSession>
         Spanned sp = Html.fromHtml(rsList.get(position).getStartDate());
         date.setText(sp);
 
-        distance.setText(String.format("%.3f", rsList.get(position).getDistanceInKm())
-                            + " km");
+        distance.setText(String.format("%.3f", rsList.get(position).getDistanceInMiles())
+                            + " miles");
 
         totalTime.setText(rsList.get(position).getTotalTime());
 

@@ -41,6 +41,7 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
     TextView elevationLoss;
     TextView startTime;
     TextView date;
+    TextView distance;
 
     SupportMapFragment mapFragment;
 
@@ -100,6 +101,7 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         elevationLoss = (TextView) findViewById(R.id.elevationLoss);
         startTime = (TextView) findViewById(R.id.startTime);
         date = (TextView) findViewById(R.id.date);
+        distance = (TextView) findViewById(R.id.distanceDetails);
 
         mapContainer = (LinearLayout) findViewById(R.id.mapContainer);
         rsDetails = (LinearLayout) findViewById(R.id.rsDetails);
@@ -117,7 +119,7 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
             mapContainer.setLayoutParams(params);
 
             params = (LinearLayout.LayoutParams) rsDetails.getLayoutParams();
-            params.weight = 0.1f;
+            params.weight = 0.15f;
             rsDetails.setLayoutParams(params);
 
             params = (LinearLayout.LayoutParams) additionalInfo.getLayoutParams();
@@ -131,7 +133,7 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
             mapContainer.setLayoutParams(params);
 
             params = (LinearLayout.LayoutParams) rsDetails.getLayoutParams();
-            params.weight = 0.1f;
+            params.weight = 0.15f;
             rsDetails.setLayoutParams(params);
 
             params = (LinearLayout.LayoutParams) additionalInfo.getLayoutParams();
@@ -151,6 +153,7 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         elevationGain.setText(String.valueOf(rs.getElevationGain()));
         elevationLoss.setText(String.valueOf(rs.getElevationLoss()));
         maxSpeed.setText(String.valueOf(rs.getMaxSpeed()));
+        distance.setText(String.format("%.3f", rs.getDistanceInMiles()));
     }
 
     private void setupMap() {
