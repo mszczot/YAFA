@@ -17,12 +17,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.FrameLayout;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.HelperClasses.PermissionUtils;
+import com.example.szczocik.yafa_yetanotherfitnessapp.MainActivity;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,6 +32,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -57,6 +59,7 @@ public class RunningFragment extends Fragment
     private static final int ACCURACY = 25;
 
     LocationHandler locationHandler;
+    private DatabaseHandler db;
 
     protected boolean isInSession = false;
 
@@ -65,6 +68,7 @@ public class RunningFragment extends Fragment
     Button startButton;
     TimerFragment timerFragment;
 
+    FrameLayout mapContainer;
     GoogleMap mMap;
     GoogleApiClient googleApiClient;
     LocationRequest locationRequest;
@@ -78,18 +82,12 @@ public class RunningFragment extends Fragment
     // TODO: Rename and change types and number of parameters
     public static RunningFragment newInstance(LocationHandler lh) {
         RunningFragment fragment = new RunningFragment();
-        Bundle args = new Bundle();
-        args.putSerializable("lh", lh);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            locationHandler = (LocationHandler) getArguments().getSerializable("lh");
-        }
     }
 
     @Override
@@ -101,9 +99,15 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        db = new DatabaseHandler(getActivity());
+        locationHandler = LocationHandler.getInstance(db);
+
         timerFragment = new TimerFragment();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.timerFrame, timerFragment).commit();
+
+        mapContainer = (FrameLayout) view.findViewById(R.id.map_container);
+        //initializeMap();
 
         startButton = (Button) view.findViewById(R.id.startSession);
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -129,6 +133,26 @@ public class RunningFragment extends Fragment
                 .build();
 
         googleApiClient.connect();
+    }
+
+    public void initializeMap() {
+        if (mMap == null) {
+//            FragmentTransaction mTransaction = getChildFragmentManager().beginTransaction();
+//            SupportMapFragment mFRaFragment = new SupportMapFragment();
+//
+//
+//            mTransaction.add(R.id.map_container, mFRaFragment);
+//            mTransaction.commit();
+//            mFRaFragment.getMapAsync(this);
+//            try {
+//                MapsInitializer.initialize(getActivity());
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+
+            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+        }
     }
 
     public void setupMapSettings() {
@@ -161,6 +185,10 @@ public class RunningFragment extends Fragment
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public void onResume() {
@@ -202,7 +230,9 @@ public class RunningFragment extends Fragment
     @Override
     public void onLocationChanged(Location location) {
         Log.d("Accuracy", String.valueOf(location.getAccuracy()));
-        updateMap(location);
+        if (location != null) {
+            updateMap(location);
+        }
         if (location.getAccuracy() <= ACCURACY) {
             locationHandler.addLocationToSession(location);
             if (locationHandler.isInSession()) {
@@ -215,7 +245,9 @@ public class RunningFragment extends Fragment
 
     private void updateMap(Location location) {
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
+        if (mMap != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
+        }
     }
 
     private void updateUI() {
@@ -282,31 +314,26 @@ public class RunningFragment extends Fragment
             startButton.setText(getResources().getString(R.string.start));
             stopSession();
 
-            LayoutInflater inflater = getActivity().getLayoutInflater();
-            View dialogLayout = inflater.inflate(R.layout.session_end_dialog, null);
+            RunningSession rs = locationHandler.getCurrentSession();
 
-            TextView dur = (TextView) dialogLayout.findViewById(R.id.durDialog);
-            dur.setText(locationHandler.getDuration());
-
-            Button yes = (Button) dialogLayout.findViewById(R.id.yesButton);
-            yes.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    locationHandler.saveCurrentSession();
-                }
-            });
-
-            Button no = (Button) dialogLayout.findViewById(R.id.noButton);
-            no.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    locationHandler.disardCurrentSession();
-                }
-            });
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setView(dialogLayout);
-            builder.show();
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Would you like to save this session?")
+                    .setMessage("Duration: " + rs.getTotalTime() +
+                            "\nDistance: " + rs.getDistance() )
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            locationHandler.saveCurrentSession((MainActivity) getActivity());
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            locationHandler.disardCurrentSession();
+                            dialog.cancel();
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
         } else {
             isInSession = true;
             startButton.setBackgroundColor(getResources().getColor(R.color.red));

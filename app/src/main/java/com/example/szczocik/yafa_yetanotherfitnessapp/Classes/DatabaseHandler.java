@@ -18,7 +18,7 @@ import java.util.Calendar;
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     //All static variables
-    private static final int DATABASE_VERSION = 32;
+    private static final int DATABASE_VERSION = 42;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -64,7 +64,7 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         db.execSQL(CREATE_TABLE_SESSIONS);
         String CREATE_TABLE_LOCATIONS = "CREATE TABLE " + TABLE_LOCATIONS + "("
                 + LOCATION_ID + " INTEGER PRIMARY KEY," + LOCATION_LAT + " REAL,"
-                + LOCATION_LONG + " REAL, " + SESSION_ID + " INTEGER " + ALTITUDE
+                + LOCATION_LONG + " REAL, " + SESSION_ID + " INTEGER, " + ALTITUDE
                 + " REAL)";
         db.execSQL(CREATE_TABLE_LOCATIONS);
     }
@@ -87,6 +87,8 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         values.put(DISTANCE, rs.getDistance());
         values.put(MAX_SPEED, rs.getMaxSpeed());
         values.put(PACE, rs.getPaceValue());
+        values.put(ELEVATION_LOSS, rs.getElevationLoss());
+        values.put(ELEVATION_GAIN, rs.getElevationGain());
 
         db.insert(TABLE_SESSIONS, null, values);
 

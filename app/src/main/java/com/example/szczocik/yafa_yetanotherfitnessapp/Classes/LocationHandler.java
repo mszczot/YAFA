@@ -17,28 +17,26 @@ import java.util.List;
 /**
  * Created by szczocik on 11/03/16.
  */
-public class LocationHandler implements Serializable, Parcelable {
+public class LocationHandler implements Parcelable {
 
     private static LocationHandler mInstance = null;
 
     private RunningSession rs;
     private DatabaseHandler db;
-    private MainActivity mainActivity;
     private ArrayList<RunningSession> rsList;
 
 
     /**
      * Constructor
      */
-    private LocationHandler(DatabaseHandler db, MainActivity ma) {
+    private LocationHandler(DatabaseHandler db) {
         this.db = db;
-        this.mainActivity = ma;
         rsList = db.getSessions();
     }
 
-    public static LocationHandler getInstance(DatabaseHandler db, MainActivity ma) {
+    public static LocationHandler getInstance(DatabaseHandler db) {
         if (mInstance == null) {
-            mInstance = new LocationHandler(db, ma);
+            mInstance = new LocationHandler(db);
         }
         return mInstance;
     }
@@ -72,10 +70,10 @@ public class LocationHandler implements Serializable, Parcelable {
         rs.stop();
     }
 
-    public void saveCurrentSession() {
+    public void saveCurrentSession(MainActivity ma) {
         db.updateSession(rs);
         db.addLocationsFromList(rs.getLocList(), rs.getSessionId());
-        updateList();
+        updateList(ma);
         rs = null;
     }
 
@@ -154,6 +152,7 @@ public class LocationHandler implements Serializable, Parcelable {
             Calendar rsDate = Calendar.getInstance();
             rsDate.setTimeInMillis(rs.getLongStartTime());
             if (rsDate.get(Calendar.MONTH) == compareDate.get(Calendar.MONTH)) {
+                Log.d("Month", compareDate.getTime().toString());
                 list.add(rs);
             }
         }
@@ -163,8 +162,8 @@ public class LocationHandler implements Serializable, Parcelable {
     /**
      * Private methods
      */
-    private void updateList() {
-        mainActivity.updateList(this);
+    private void updateList(MainActivity ma) {
+        ma.updateList(this);
     }
 
     @Override

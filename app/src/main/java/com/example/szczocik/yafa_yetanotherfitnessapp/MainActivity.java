@@ -91,8 +91,8 @@ public class MainActivity extends AppCompatActivity
 
     private void setup() {
         db = new DatabaseHandler(this);
-        test(db);
-        locationHandler = locationHandler.getInstance(db, this);
+        //test(db);
+        locationHandler = locationHandler.getInstance(db);
         runningFragment = (RunningFragment) mSectionsPagerAdapter.getItem(1);
     }
 
@@ -153,16 +153,19 @@ public class MainActivity extends AppCompatActivity
             for (int j=1; j<cl.getActualMaximum(Calendar.DAY_OF_MONTH); j++) {
                 cl.set(Calendar.DAY_OF_MONTH, j);
                 rs = new RunningSession();
-                cl.set(Calendar.HOUR_OF_DAY, cl.get(Calendar.HOUR_OF_DAY) - 1);
+                cl.set(Calendar.MINUTE, 0);
+                cl.set(Calendar.HOUR_OF_DAY, cl.get(Calendar.HOUR_OF_DAY));
                 rs.setStartTime(cl.getTimeInMillis());
 
-                cl.set(Calendar.HOUR_OF_DAY, cl.get(Calendar.HOUR_OF_DAY) + 1);
+                int minutes = r.nextInt(60 - 30) +30;
+
+                cl.set(Calendar.MINUTE, minutes);
                 rs.setEndTime(cl.getTimeInMillis());
-                rs.setPace(r.nextInt(15-5)+5); //random number between 5 and 15
-                rs.setElevationGain(r.nextInt(50-10)+10); //random number between 10 and 50
-                rs.setElevationLoss(r.nextInt(50-10)+10);
-                rs.setAvgSpeed(r.nextInt(10-2)+2); // 2 - 10
-                rs.setDistance(r.nextInt(3000-500)+500); //500 - 3000
+                rs.setPace(r.nextInt(15 - 5) + 5); //random number between 5 and 15
+                rs.setElevationGain(r.nextInt(50 - 10) + 10); //random number between 10 and 50
+                rs.setElevationLoss(r.nextInt(50 - 10) + 10);
+                rs.setAvgSpeed(r.nextInt(10 - 2) + 2); // 2 - 10
+                rs.setDistance(r.nextInt(3000 - 500) + 500); //500 - 3000
                 rs.setMaxSpeed(r.nextInt(15 - 2) + 2);
                 db.addSession(rs);
             }

@@ -45,40 +45,95 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@color/ligthGrey"
-            android:layout_marginBottom="@dimen/topMarginDetails"></LinearLayout>
+            android:layout_height="500dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/statisticTitle"
-            android:layout_marginTop="@dimen/appbar_padding_top"
-            android:layout_gravity="center"
-            android:gravity="center"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-        <lecho.lib.hellocharts.view.ColumnChartView
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/graphHeight"
-            android:id="@+id/distancesChart"
-            android:layout_marginTop="@dimen/fab_margin"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="@color/ligthGrey"
+                    android:layout_marginBottom="@dimen/topMarginDetails"></LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/avgPaceTitle"
-            android:layout_marginTop="@dimen/appbar_padding_top"
-            android:layout_gravity="center"
-            android:gravity="center"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-        <lecho.lib.hellocharts.view.LineChartView
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/graphHeight"
-            android:id="@+id/avgPaceChart"
-            android:layout_marginTop="@dimen/fab_margin"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/totalSessions"
+                        android:textSize="@dimen/detailsFontSize"
+                        android:layout_marginLeft="@dimen/activity_horizontal_margin"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/totalSessions"
+                        android:textSize="@dimen/detailsFontSize"
+                        android:layout_marginRight="@dimen/activity_horizontal_margin"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/statisticTitle"
+                    android:textSize="@dimen/detailsFontSize"
+                    android:layout_marginTop="@dimen/appbar_padding_top"
+                    android:layout_gravity="center"
+                    android:gravity="center"/>
+
+                <lecho.lib.hellocharts.view.ColumnChartView
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/graphHeight"
+                    android:id="@+id/distancesChart"
+                    android:layout_marginTop="@dimen/fab_margin"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/avgPaceTitle"
+                    android:textSize="@dimen/detailsFontSize"
+                    android:layout_marginTop="@dimen/appbar_padding_top"
+                    android:layout_gravity="center"
+                    android:gravity="center"/>
+
+                <lecho.lib.hellocharts.view.LineChartView
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/graphHeight"
+                    android:id="@+id/avgPaceChart"
+                    android:layout_marginTop="@dimen/fab_margin"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/detailsFontSize"
+                    android:layout_marginTop="@dimen/appbar_padding_top"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/elevation"/>
+
+                <lecho.lib.hellocharts.view.PieChartView
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/graphHeight"
+                    android:id="@+id/elevationPieChart"
+                    android:layout_marginTop="@dimen/fab_margin"/>
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
+
 
 </FrameLayout>

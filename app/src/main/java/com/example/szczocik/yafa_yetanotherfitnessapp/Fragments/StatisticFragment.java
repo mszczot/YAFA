@@ -1,9 +1,12 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Fragments;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
@@ -24,12 +28,15 @@ import lecho.lib.hellocharts.model.Column;
 import lecho.lib.hellocharts.model.ColumnChartData;
 import lecho.lib.hellocharts.model.Line;
 import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PieChartData;
 import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.model.SubcolumnValue;
 import lecho.lib.hellocharts.model.ValueShape;
 import lecho.lib.hellocharts.util.ChartUtils;
 import lecho.lib.hellocharts.view.ColumnChartView;
 import lecho.lib.hellocharts.view.LineChartView;
+import lecho.lib.hellocharts.view.PieChartView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,11 +62,24 @@ public class StatisticFragment extends Fragment {
     private boolean isFilled = false;
     private boolean isCubic = false;
 
+    //PieChart
+    private PieChartView chart;
+    private PieChartData data;
+
+    private boolean hasLabelsOutside = false;
+    private boolean hasCenterCircle = false;
+    private boolean hasCenterText1 = false;
+    private boolean hasCenterText2 = false;
+    private boolean isExploded = false;
+    private boolean hasLabelsPieChart = true;
+
+    private DatabaseHandler db;
     private LocationHandler locationHandler;
 
     private OnFragmentInteractionListener mListener;
 
     private TextView month;
+    private TextView totalSessions;
 
     private Button left;
     private Button right;
@@ -71,6 +91,11 @@ public class StatisticFragment extends Fragment {
     private ColumnChartView distances;
     private LineChartView avgPace;
 
+    private float[] dist;
+    private float[] avgpace;
+    private float elevationGain;
+    private float elevationLoss;
+
     public StatisticFragment() {
         // Required empty public constructor
     }
@@ -78,7 +103,7 @@ public class StatisticFragment extends Fragment {
     public static StatisticFragment newInstance(LocationHandler lh) {
         StatisticFragment fragment = new StatisticFragment();
         Bundle args = new Bundle();
-        args.putSerializable("lh", lh);
+        args.putParcelable("lh", lh);
         fragment.setArguments(args);
         return fragment;
     }
@@ -86,15 +111,14 @@ public class StatisticFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            locationHandler = (LocationHandler) getArguments().getSerializable("lh");
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        db = new DatabaseHandler(getActivity());
+        locationHandler = LocationHandler.getInstance(db);
         return inflater.inflate(R.layout.fragment_statistic, container, false);
     }
 
@@ -105,8 +129,11 @@ public class StatisticFragment extends Fragment {
 
     private void setView(View view) {
         month = (TextView) view.findViewById(R.id.statisticsMonth);
+        totalSessions = (TextView) view.findViewById(R.id.totalSessions);
+
         distances = (ColumnChartView) view.findViewById(R.id.distancesChart);
         avgPace = (LineChartView) view.findViewById(R.id.avgPaceChart);
+        chart = (PieChartView) view.findViewById(R.id.elevationPieChart);
 
         cl = Calendar.getInstance();
         monthDisplayed = cl.get(Calendar.MONTH);
@@ -163,14 +190,99 @@ public class StatisticFragment extends Fragment {
     }
 
     private void getGraphs() {
+        cl.set(Calendar.DAY_OF_MONTH, 1);
         cl.set(Calendar.MONTH, monthDisplayed);
+
         ArrayList<RunningSession> rsForMonth = locationHandler.getSessionForMonth(cl);
 
-        setDistanceGraphs(rsForMonth);
-        setAvgPaceGraph(rsForMonth);
+        getData(rsForMonth);
+
+        setDistanceGraphs();
+        setAvgPaceGraph();
+        setElevationGraph();
+
+        totalSessions.setText(String.valueOf(rsForMonth.size()));
     }
 
-    public void setAvgPaceGraph(ArrayList<RunningSession> rsList) {
+    private void getData(ArrayList<RunningSession> rsList) {
+        cl.set(Calendar.DAY_OF_MONTH, cl.getActualMaximum(Calendar.DAY_OF_MONTH));
+
+        avgpace = new float[cl.getActualMaximum(Calendar.DAY_OF_MONTH)];
+        dist =  new float[cl.getActualMaximum(Calendar.DAY_OF_MONTH)];
+
+        elevationLoss = 0;
+        elevationGain = 0;
+
+        int test = cl.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for (int j = 0; j<test; ++j) {
+            Log.d("Loop", "number of days: " + test + ", j: " + j);
+            cl.set(Calendar.DAY_OF_MONTH, j);
+
+            int count = 0;
+            for (RunningSession rs : rsList) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(rs.getLongStartTime());
+
+                if (calendar.get(Calendar.DAY_OF_MONTH) == cl.get(Calendar.DAY_OF_MONTH)) {
+                    avgpace[j] += rs.getPaceValue();
+                    count++;
+
+                    dist[j] += rs.getDistance();
+
+                    elevationGain += rs.getElevationGain();
+                    elevationLoss += rs.getElevationLoss();
+                }
+            }
+            if (count != 0) {
+                avgpace[j] = (avgpace[j] / count);
+            }
+            if (Float.isInfinite(avgpace[j])) {
+                avgpace[j] = 0;
+            }
+        }
+    }
+
+    public void setElevationGraph() {
+        List<SliceValue> values = new ArrayList<>();
+        SliceValue loss = new SliceValue(elevationLoss, ChartUtils.COLOR_GREEN);
+        SliceValue gain = new SliceValue(elevationGain, ChartUtils.COLOR_RED);
+        values.add(loss);
+        values.add(gain);
+
+        data = new PieChartData(values);
+        data.setHasLabels(hasLabelsPieChart);
+        data.setHasLabelsOnlyForSelected(hasLabelForSelected);
+        data.setHasLabelsOutside(hasLabelsOutside);
+        data.setHasCenterCircle(hasCenterCircle);
+
+        if (isExploded) {
+            data.setSlicesSpacing(24);
+        }
+
+        if (hasCenterText1) {
+            data.setCenterText1("Hello!");
+
+            // Get roboto-italic font.
+            Typeface tf = Typeface.createFromAsset(getActivity().getAssets(), "Roboto-Italic.ttf");
+            data.setCenterText1Typeface(tf);
+
+            // Get font size from dimens.xml and convert it to sp(library uses sp values).
+            data.setCenterText1FontSize(ChartUtils.px2sp(getResources().getDisplayMetrics().scaledDensity,42));
+        }
+
+        if (hasCenterText2) {
+            data.setCenterText2("Charts (Roboto Italic)");
+
+            Typeface tf = Typeface.createFromAsset(getActivity().getAssets(), "Roboto-Italic.ttf");
+
+            data.setCenterText2Typeface(tf);
+            data.setCenterText2FontSize(ChartUtils.px2sp(getResources().getDisplayMetrics().scaledDensity,16));
+        }
+
+        chart.setPieChartData(data);
+    }
+
+    public void setAvgPaceGraph() {
         cl.set(Calendar.DAY_OF_MONTH, cl.getActualMaximum(Calendar.DAY_OF_MONTH));
         int numberOfPoints = cl.get(Calendar.DAY_OF_MONTH);
 
@@ -181,24 +293,7 @@ public class StatisticFragment extends Fragment {
 
             cl.set(Calendar.DAY_OF_MONTH, j);
 
-            float avgPace = 0;
-            int count = 0;
-            for (RunningSession rs:rsList) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(rs.getLongStartTime());
-
-                if (calendar.get(Calendar.DAY_OF_MONTH) == cl.get(Calendar.DAY_OF_MONTH)) {
-                    avgPace += rs.getPaceValue();
-                    count++;
-                }
-            }
-            if (count != 0) {
-                avgPace = (avgPace/count);
-            }
-            if (Float.isInfinite(avgPace)) {
-                avgPace = 0;
-            }
-            values.add(new PointValue(j, avgPace));
+            values.add(new PointValue(j, avgpace[j]));
         }
 
         Line line = new Line(values);
@@ -234,31 +329,21 @@ public class StatisticFragment extends Fragment {
         avgPace.setLineChartData(data);
     }
 
-    public void setDistanceGraphs(ArrayList<RunningSession> rsList) {
-        cl.set(Calendar.DAY_OF_MONTH, cl.getActualMaximum(Calendar.DAY_OF_MONTH));
+    public void setDistanceGraphs() {
+        cl.set(Calendar.MONTH, monthDisplayed);
+        cl.set(Calendar.DAY_OF_MONTH, 1);
         int numSubcolumns = 1;
-        int numColumns = cl.get(Calendar.DAY_OF_MONTH);
+        int numColumns = cl.getActualMaximum(Calendar.DAY_OF_MONTH);
         // Column can have many subcolumns, here by default I use 1 subcolumn in each of 8 columns.
         List<Column> columns = new ArrayList<>();
         List<SubcolumnValue> values;
 
-        cl.set(Calendar.MONTH, monthDisplayed);
         for (int i = 0; i < numColumns; ++i) {
             cl.set(Calendar.DAY_OF_MONTH, i);
 
-            float dist = 0;
-
-            for (RunningSession rs:rsList) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(rs.getLongStartTime());
-                if (calendar.get(Calendar.DAY_OF_MONTH) == cl.get(Calendar.DAY_OF_MONTH)) {
-                    dist += rs.getDistance();
-                }
-            }
-
             values = new ArrayList<>();
             for (int j = 0; j < numSubcolumns; ++j) {
-                values.add(new SubcolumnValue(dist, ChartUtils.pickColor()));
+                values.add(new SubcolumnValue(dist[i], ChartUtils.pickColor()));
             }
 
             Column column = new Column(values);

@@ -51,7 +51,7 @@ public class HistoryFragment extends Fragment implements Serializable {
     public static HistoryFragment newInstance(LocationHandler lh) {
         HistoryFragment fragment = new HistoryFragment();
         Bundle args = new Bundle();
-        args.putSerializable("LocationHandler", lh);
+        args.putParcelable("LocationHandler", lh);
         fragment.setArguments(args);
         return fragment;
     }
@@ -59,9 +59,6 @@ public class HistoryFragment extends Fragment implements Serializable {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            lh = (LocationHandler) getArguments().getSerializable("LocationHandler");
-        }
     }
 
     @Override
@@ -73,9 +70,10 @@ public class HistoryFragment extends Fragment implements Serializable {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh.getRsList());
         db = new DatabaseHandler(getActivity());
+        lh = LocationHandler.getInstance(db);
 
+        adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh.getRsList());
         list = (ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);
 

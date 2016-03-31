@@ -14,7 +14,7 @@ import java.util.Date;
 /**
  * Created by szczocik on 09/03/16.
  */
-public class RunningSession implements Parcelable {
+public class RunningSession implements Parcelable{
 
 //region static variables
     private static double KM_TO_MILES = 0.621371;
@@ -54,6 +54,11 @@ public class RunningSession implements Parcelable {
         this.locList = new ArrayList<>();
     }
 
+
+//endregion
+
+//region public methods
+
     protected RunningSession(Parcel in) {
         startTime = in.readLong();
         endTime = in.readLong();
@@ -62,12 +67,25 @@ public class RunningSession implements Parcelable {
         speed = in.readFloat();
         distance = in.readFloat();
         sessionId = in.readInt();
-        days = in.createStringArray();
-        months = in.createStringArray();
+        pace = in.readFloat();
+        duration = in.readLong();
+        maxSpeed = in.readFloat();
+        elevationGain = in.readFloat();
+        elevationLoss = in.readFloat();
+        currentAltitude = in.readDouble();
     }
-//endregion
 
-//region public methods
+    public static final Creator<RunningSession> CREATOR = new Creator<RunningSession>() {
+        @Override
+        public RunningSession createFromParcel(Parcel in) {
+            return new RunningSession(in);
+        }
+
+        @Override
+        public RunningSession[] newArray(int size) {
+            return new RunningSession[size];
+        }
+    };
 
     /**
      * Method to stop the session
@@ -344,9 +362,6 @@ public class RunningSession implements Parcelable {
         this.avgSpeed = avgSpeed;
     }
 
-    //endregion
-
-//region Parcelable methods
     @Override
     public int describeContents() {
         return 0;
@@ -361,21 +376,18 @@ public class RunningSession implements Parcelable {
         dest.writeFloat(speed);
         dest.writeFloat(distance);
         dest.writeInt(sessionId);
-        dest.writeStringArray(days);
-        dest.writeStringArray(months);
+        dest.writeFloat(pace);
+        dest.writeLong(duration);
+        dest.writeFloat(maxSpeed);
+        dest.writeFloat(elevationGain);
+        dest.writeFloat(elevationLoss);
+        dest.writeDouble(currentAltitude);
     }
 
-    public static final Creator<RunningSession> CREATOR = new Creator<RunningSession>() {
-        @Override
-        public RunningSession createFromParcel(Parcel in) {
-            return new RunningSession(in);
-        }
+    //endregion
 
-        @Override
-        public RunningSession[] newArray(int size) {
-            return new RunningSession[size];
-        }
-    };
+//region Parcelable methods
+
 //endregion
 
 }
