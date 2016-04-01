@@ -1,19 +1,22 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Activities;
 
-import android.app.ActionBar;
 import android.location.Location;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.RunningSession;
 import com.example.szczocik.yafa_yetanotherfitnessapp.R;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.share.Sharer;
+import com.facebook.share.model.ShareOpenGraphAction;
+import com.facebook.share.model.ShareOpenGraphContent;
+import com.facebook.share.model.ShareOpenGraphObject;
+import com.facebook.share.widget.ShareButton;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -22,14 +25,14 @@ import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.w3c.dom.Text;
-
+/**
+ * Created by Marcin Szczot (40180425)
+ * Activity to display details of running session
+ */
 public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallback {
 
-    private static final int LAYOUT_HEIGHT = 0;
-
+    //region variables
     GoogleMap mMap;
-    GoogleApiClient googleApiClient;
 
     private RunningSession rs;
 
@@ -43,6 +46,8 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
     TextView date;
     TextView distance;
 
+    ShareButton shareButton;
+
     SupportMapFragment mapFragment;
 
     LinearLayout mapContainer;
@@ -51,27 +56,34 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
 
     private boolean mapView = false;
 
+    private CallbackManager callbackManager;
+    //endregion
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history_details);
-
         Bundle extras = getIntent().getExtras();
+        //get runningSession from the intent
         if (extras != null) {
             rs = extras.getParcelable("rs");
         }
 
+        //setup map
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapDetails);
         mapFragment.getMapAsync(this);
 
         setupView();
-
-
     }
 
 
+    /**
+     * Callback when map is ready
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        //setup map and add lines to the map
         mMap = googleMap;
         setupMap();
         PolylineOptions po = new PolylineOptions();
@@ -92,7 +104,50 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         });
     }
 
+    /**
+     * Method to setup the view
+     */
     private void setupView(){
+        //create the content for sharing on facebook
+        ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
+                .putString("og:type", "fitness.course")
+                .putString("og:title", "Running session")
+                .putString("og:description", "My running session.")
+                .putLong("fitness:duration:value", rs.getDuration())
+                .putString("fitness:duration:units", "s")
+                .putInt("fitness:distance:value", (int) rs.getDistance())
+                .putString("fitness:distance:units", "mi")
+                .build();
+        ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
+                .setActionType("fitness.runs")
+                .putObject("fitness:course", object)
+                .build();
+         ShareOpenGraphContent content = new ShareOpenGraphContent.Builder()
+                .setPreviewPropertyName("fitness:course")
+                .setAction(action)
+                .build();
+        shareButton = (ShareButton) findViewById(R.id.share_button);
+        shareButton.setShareContent(content);
+
+        callbackManager = CallbackManager.Factory.create();
+        shareButton.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
+            @Override
+            public void onSuccess(Sharer.Result result) {
+                Log.i("Facebook", "SHARING SUCCESS!");
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                Log.e("Facebook", "SHARING ERROR! - " + error.getMessage());
+            }
+
+            @Override
+            public void onCancel() {
+                Log.w("Facebook", "SHARING CANCEL!");
+            }
+        });
+
+        //display details of the session
         duration = (TextView) findViewById(R.id.duration);
         avgSpeed = (TextView) findViewById(R.id.avgSpeedDetail);
         avgPace = (TextView) findViewById(R.id.avgPaceDetail);
@@ -110,8 +165,11 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         updateUI();
     }
 
+    /**
+     * Method to change the view - between details and map
+     */
     private void swapViews(){
-        Log.d("View", String.valueOf(mapView));
+        //if the user is not in map view remove the details view and show the map
         if (!mapView) {
 
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mapContainer.getLayoutParams();
@@ -144,6 +202,9 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         }
     }
 
+    /**
+     * Method to update the ui
+     */
     private void updateUI() {
         duration.setText(rs.getTotalTime());
         avgSpeed.setText(String.format("%.2f", rs.getAvgSpeed()));
@@ -156,6 +217,9 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
         distance.setText(String.format("%.3f", rs.getDistanceInMiles()));
     }
 
+    /**
+     * Method to setup the settings for the map
+     */
     private void setupMap() {
         UiSettings settings = mMap.getUiSettings();
         if (!mapView) {
@@ -178,5 +242,4 @@ public class HistoryDetails extends AppCompatActivity implements OnMapReadyCallb
             settings.setZoomGesturesEnabled(true);
         }
     }
-
 }

@@ -25,34 +25,23 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 import java.io.Serializable;
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link HistoryFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link HistoryFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Created by Marcin Szczot (40180425)
  */
 public class HistoryFragment extends Fragment implements Serializable {
 
-    DatabaseHandler db;
-
-    ListView list;
-
-    private OnFragmentInteractionListener mListener;
-
-    public SessionsList adapter;
-
+    private DatabaseHandler db;
     private LocationHandler lh;
+
+    private ListView list;
+    private OnFragmentInteractionListener mListener;
+    public SessionsList adapter;
 
     public HistoryFragment() {
         // Required empty public constructor
     }
 
-    public static HistoryFragment newInstance(LocationHandler lh) {
+    public static HistoryFragment newInstance() {
         HistoryFragment fragment = new HistoryFragment();
-        Bundle args = new Bundle();
-        args.putParcelable("LocationHandler", lh);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -70,13 +59,17 @@ public class HistoryFragment extends Fragment implements Serializable {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        //get database and location handler
         db = new DatabaseHandler(getActivity());
         lh = LocationHandler.getInstance(db);
 
+        //setup adapter for the list view
         adapter = new SessionsList(getActivity(), R.layout.sessions_list, lh.getRsList());
         list = (ListView) view.findViewById(R.id.list);
         list.setAdapter(adapter);
 
+        //set on item click listener for the list
+        //if item clicked start new activity to show details of the session
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -87,6 +80,8 @@ public class HistoryFragment extends Fragment implements Serializable {
             }
         });
 
+        //set on item long click listener
+        //when long clicked, show alert dialog to prompt the user to remove the session
         list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
@@ -102,7 +97,7 @@ public class HistoryFragment extends Fragment implements Serializable {
                         })
                         .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                // do nothing
+
                             }
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)

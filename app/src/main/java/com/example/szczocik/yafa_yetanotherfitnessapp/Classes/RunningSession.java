@@ -12,18 +12,19 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * Created by szczocik on 09/03/16.
+ * Created by Marcin Szczot (40180425) on 09/03/16.
+ * Running Session class to store details of every running session
  */
 public class RunningSession implements Parcelable{
 
-//region static variables
+    //region static variables
     private static double KM_TO_MILES = 0.621371;
     private static String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday"};
     private static String[] months = {"January","February","March","April","May","June",
             "July","August","September","October","November","December"};
 //endregion
 
-//region variables
+    //region variables
     private long startTime;
     private long endTime;
     private ArrayList<Location> locList;
@@ -38,9 +39,9 @@ public class RunningSession implements Parcelable{
     private float elevationLoss;
 
     private double currentAltitude;
-//endregion
+    //endregion
 
-//region constructors
+    //region constructors
     public RunningSession(long st, long et, float dist, int sId) {
         this.startTime = st;
         this.endTime = et;
@@ -55,38 +56,9 @@ public class RunningSession implements Parcelable{
     }
 
 
-//endregion
+    //endregion
 
-//region public methods
-
-    protected RunningSession(Parcel in) {
-        startTime = in.readLong();
-        endTime = in.readLong();
-        locList = in.createTypedArrayList(Location.CREATOR);
-        avgSpeed = in.readFloat();
-        speed = in.readFloat();
-        distance = in.readFloat();
-        sessionId = in.readInt();
-        pace = in.readFloat();
-        duration = in.readLong();
-        maxSpeed = in.readFloat();
-        elevationGain = in.readFloat();
-        elevationLoss = in.readFloat();
-        currentAltitude = in.readDouble();
-    }
-
-    public static final Creator<RunningSession> CREATOR = new Creator<RunningSession>() {
-        @Override
-        public RunningSession createFromParcel(Parcel in) {
-            return new RunningSession(in);
-        }
-
-        @Override
-        public RunningSession[] newArray(int size) {
-            return new RunningSession[size];
-        }
-    };
-
+    //region public methods
     /**
      * Method to stop the session
      */
@@ -143,9 +115,15 @@ public class RunningSession implements Parcelable{
         long totalsec = (endTime - startTime)/1000;
         return formatTime(totalsec);
     }
-//endregion
+    //endregion
 
-//region private methods
+    //region private methods
+
+    /**
+     * Method to return formated time
+     * @param time
+     * @return
+     */
     private String formatTime(long time) {
         NumberFormat f = new DecimalFormat("00");
         long minutes = time/60;
@@ -159,6 +137,10 @@ public class RunningSession implements Parcelable{
         return f.format(hours) + ":" + f.format(minutes) + ":" + f.format(secs);
     }
 
+    /**
+     * Method to set the max speed
+     * @param l
+     */
     private void setMaxSpeed(Location l) {
         float speedCalc = calculateSpeedBetween2Locations(l);
         if (this.maxSpeed != 0) {
@@ -176,6 +158,11 @@ public class RunningSession implements Parcelable{
         }
     }
 
+    /**
+     * Method to calculate the speed between 2 locations
+     * @param currLocation
+     * @return
+     */
     private float calculateSpeedBetween2Locations(Location currLocation) {
         float dist = locList.get(locList.size() - 1).distanceTo(currLocation); //distance in meters
         // duration between points in long format
@@ -183,6 +170,10 @@ public class RunningSession implements Parcelable{
         return dist/duration * 3600;
     }
 
+    /**
+     * Method to set the elevation
+     * @param l
+     */
     private void setElevation(Location l) {
         if (this.currentAltitude != 0) {
             if (l.getAltitude()-this.currentAltitude > 0) {
@@ -195,11 +186,19 @@ public class RunningSession implements Parcelable{
         }
     }
 
+    /**
+     * Method to calculate the average speed
+     */
     private void calculateAvgSpeed(){
         Calendar cl = Calendar.getInstance();
         this.avgSpeed = getDistanceInMiles()/(cl.getTimeInMillis()-this.startTime) * 3600000; //miles per hour
     }
 
+    /**
+     * method to get the day end: st, nd, rd, th
+     * @param day
+     * @return
+     */
     private String getDayEnd(int day) {
         switch(day) {
             case 1:
@@ -213,6 +212,9 @@ public class RunningSession implements Parcelable{
         }
     }
 
+    /**
+     * Method to calculate the pace
+     */
     private void calculatePace() {
         //minutes per mile
         setDuration();
@@ -224,14 +226,17 @@ public class RunningSession implements Parcelable{
         }
     }
 
+    /**
+     * Method to calculate and set the duration
+     */
     private void setDuration() {
         if (locList.size() >= 2) {
             this.duration = locList.get(locList.size()-1).getTime() - this.startTime;
         }
     }
-//endregion
+    //endregion
 
-//region accessors
+    //region accessors
     public int getSessionId() {
         return sessionId;
     }
@@ -252,10 +257,6 @@ public class RunningSession implements Parcelable{
 
     public float getAvgSpeed() {
         calculateAvgSpeed();
-        return avgSpeed;
-    }
-
-    public float getAvgSpeedValue() {
         return avgSpeed;
     }
 
@@ -285,15 +286,8 @@ public class RunningSession implements Parcelable{
         this.locList = locList;
     }
 
-    public float getSpeed() {
-        return speed;
-    }
-
     public float getPace() {
         calculatePace();
-//        if (this.pace > 60) {
-//            return 0;
-//        }
         return pace;
     }
 
@@ -354,12 +348,12 @@ public class RunningSession implements Parcelable{
         this.distance = distance;
     }
 
-    public void setSpeed(float speed) {
-        this.speed = speed;
-    }
-
     public void setAvgSpeed(float avgSpeed) {
         this.avgSpeed = avgSpeed;
+    }
+
+    public long getDuration() {
+        return duration;
     }
 
     @Override
@@ -367,6 +361,9 @@ public class RunningSession implements Parcelable{
         return 0;
     }
 
+    //endregion
+
+    //region Parcelable methods
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(startTime);
@@ -384,10 +381,32 @@ public class RunningSession implements Parcelable{
         dest.writeDouble(currentAltitude);
     }
 
+    protected RunningSession(Parcel in) {
+        startTime = in.readLong();
+        endTime = in.readLong();
+        locList = in.createTypedArrayList(Location.CREATOR);
+        avgSpeed = in.readFloat();
+        speed = in.readFloat();
+        distance = in.readFloat();
+        sessionId = in.readInt();
+        pace = in.readFloat();
+        duration = in.readLong();
+        maxSpeed = in.readFloat();
+        elevationGain = in.readFloat();
+        elevationLoss = in.readFloat();
+        currentAltitude = in.readDouble();
+    }
+
+    public static final Creator<RunningSession> CREATOR = new Creator<RunningSession>() {
+        @Override
+        public RunningSession createFromParcel(Parcel in) {
+            return new RunningSession(in);
+        }
+
+        @Override
+        public RunningSession[] newArray(int size) {
+            return new RunningSession[size];
+        }
+    };
     //endregion
-
-//region Parcelable methods
-
-//endregion
-
 }

@@ -39,19 +39,22 @@ import lecho.lib.hellocharts.view.LineChartView;
 import lecho.lib.hellocharts.view.PieChartView;
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link StatisticFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link StatisticFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Created by Marcin Szczot (40180425)
+ * Statistic fragment to display the statistics of previous sessions
+ * Statistics are grouped by months
+ *
+ * For graphs I have used the external library:
+ * hellocharts-android
+ * Created by Leszek Wach
+ * link: https://github.com/lecho/hellocharts-android
  */
 public class StatisticFragment extends Fragment {
 
     private static String[] months = {"January","February","March","April","May","June",
             "July","August","September","October","November","December"};
 
-
+    //region variables for charts
+    //Line and column chart
     private boolean hasAxes = true;
     private boolean hasAxesNames = true;
     private boolean hasLabels = false;
@@ -72,6 +75,7 @@ public class StatisticFragment extends Fragment {
     private boolean hasCenterText2 = false;
     private boolean isExploded = false;
     private boolean hasLabelsPieChart = true;
+    //endregion
 
     private DatabaseHandler db;
     private LocationHandler locationHandler;
@@ -91,6 +95,7 @@ public class StatisticFragment extends Fragment {
     private ColumnChartView distances;
     private LineChartView avgPace;
 
+    //data sources for charts
     private float[] dist;
     private float[] avgpace;
     private float elevationGain;
@@ -100,11 +105,8 @@ public class StatisticFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static StatisticFragment newInstance(LocationHandler lh) {
+    public static StatisticFragment newInstance() {
         StatisticFragment fragment = new StatisticFragment();
-        Bundle args = new Bundle();
-        args.putParcelable("lh", lh);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -116,9 +118,12 @@ public class StatisticFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+
+        //create new DatabaseHandler and get instance of locationHandler
         db = new DatabaseHandler(getActivity());
         locationHandler = LocationHandler.getInstance(db);
+
+        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_statistic, container, false);
     }
 
@@ -127,21 +132,29 @@ public class StatisticFragment extends Fragment {
         setView(view);
     }
 
+    /**
+     * Method for setting up the view
+     * @param view
+     */
     private void setView(View view) {
+        //textviews
         month = (TextView) view.findViewById(R.id.statisticsMonth);
         totalSessions = (TextView) view.findViewById(R.id.totalSessions);
 
+        //charts
         distances = (ColumnChartView) view.findViewById(R.id.distancesChart);
         avgPace = (LineChartView) view.findViewById(R.id.avgPaceChart);
         chart = (PieChartView) view.findViewById(R.id.elevationPieChart);
 
-        cl = Calendar.getInstance();
-        monthDisplayed = cl.get(Calendar.MONTH);
-
-        month.setText(months[monthDisplayed]);
-
+        //buttons
         right = (Button) view.findViewById(R.id.right);
         left = (Button) view.findViewById(R.id.left);
+
+        cl = Calendar.getInstance();
+        monthDisplayed = cl.get(Calendar.MONTH);
+        Log.d("Date", cl.getTime().toString());
+
+        month.setText(months[monthDisplayed]);
 
         right.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,6 +173,9 @@ public class StatisticFragment extends Fragment {
         getGraphs();
     }
 
+    /**
+     * Method to update the view - change the name of the month
+     */
     public void updateView() {
         month.setText(months[monthDisplayed]);
     }
@@ -170,7 +186,11 @@ public class StatisticFragment extends Fragment {
         }
     }
 
+    /**
+     * Method for onClickListener to navigate right
+     */
     public void nextMonth() {
+        //if the month isn't current month or December then it updates the view and creates the graphs
         cl = Calendar.getInstance();
         if (monthDisplayed != 11 && monthDisplayed != cl.get(Calendar.MONTH)) {
             monthDisplayed++;
@@ -181,7 +201,11 @@ public class StatisticFragment extends Fragment {
         }
     }
 
+    /**
+     * Method for onClickListener to navigate left
+     */
     public void previousMonth() {
+        //change the month and display graphs
         if (monthDisplayed != 0) {
             monthDisplayed--;
             updateView();
@@ -189,33 +213,46 @@ public class StatisticFragment extends Fragment {
         }
     }
 
+    /**
+     * Method to set the graphs
+     */
     private void getGraphs() {
+        //change the calendar for 1st of the month displayed
         cl.set(Calendar.DAY_OF_MONTH, 1);
         cl.set(Calendar.MONTH, monthDisplayed);
 
+        //get the list of Running session for this month
         ArrayList<RunningSession> rsForMonth = locationHandler.getSessionForMonth(cl);
 
+        //get Data to be displayed from the list
         getData(rsForMonth);
 
+        //set the graphs
         setDistanceGraphs();
         setAvgPaceGraph();
         setElevationGraph();
 
+        //display total number of sessions
         totalSessions.setText(String.valueOf(rsForMonth.size()));
     }
 
+    /**
+     * Method to get data for the month displayed
+     * @param rsList
+     */
     private void getData(ArrayList<RunningSession> rsList) {
+        //set calendar for the max day of the month
         cl.set(Calendar.DAY_OF_MONTH, cl.getActualMaximum(Calendar.DAY_OF_MONTH));
 
+        //create new arrays for storing data
         avgpace = new float[cl.getActualMaximum(Calendar.DAY_OF_MONTH)];
         dist =  new float[cl.getActualMaximum(Calendar.DAY_OF_MONTH)];
 
         elevationLoss = 0;
         elevationGain = 0;
 
-        int test = cl.getActualMaximum(Calendar.DAY_OF_MONTH);
-        for (int j = 0; j<test; ++j) {
-            Log.d("Loop", "number of days: " + test + ", j: " + j);
+        //iterate thru every day of the month and collect the data
+        for (int j = 1; j<=cl.getActualMaximum(Calendar.DAY_OF_MONTH); ++j) {
             cl.set(Calendar.DAY_OF_MONTH, j);
 
             int count = 0;
@@ -224,24 +261,27 @@ public class StatisticFragment extends Fragment {
                 calendar.setTimeInMillis(rs.getLongStartTime());
 
                 if (calendar.get(Calendar.DAY_OF_MONTH) == cl.get(Calendar.DAY_OF_MONTH)) {
-                    avgpace[j] += rs.getPaceValue();
+                    avgpace[j-1] += rs.getPaceValue();
                     count++;
 
-                    dist[j] += rs.getDistance();
+                    dist[j-1] += rs.getDistance();
 
                     elevationGain += rs.getElevationGain();
                     elevationLoss += rs.getElevationLoss();
                 }
             }
             if (count != 0) {
-                avgpace[j] = (avgpace[j] / count);
+                avgpace[j-1] = (avgpace[j-1] / count);
             }
-            if (Float.isInfinite(avgpace[j])) {
-                avgpace[j] = 0;
+            if (Float.isInfinite(avgpace[j-1])) {
+                avgpace[j-1] = 0;
             }
         }
     }
 
+    /**
+     * Method to display Elevation Graph - Pie chart
+     */
     public void setElevationGraph() {
         List<SliceValue> values = new ArrayList<>();
         SliceValue loss = new SliceValue(elevationLoss, ChartUtils.COLOR_GREEN);
@@ -282,6 +322,9 @@ public class StatisticFragment extends Fragment {
         chart.setPieChartData(data);
     }
 
+    /**
+     * Method to display Average Pace graph - Line graph
+     */
     public void setAvgPaceGraph() {
         cl.set(Calendar.DAY_OF_MONTH, cl.getActualMaximum(Calendar.DAY_OF_MONTH));
         int numberOfPoints = cl.get(Calendar.DAY_OF_MONTH);
@@ -329,6 +372,9 @@ public class StatisticFragment extends Fragment {
         avgPace.setLineChartData(data);
     }
 
+    /**
+     * Method to display Distance Graph - Histogram
+     */
     public void setDistanceGraphs() {
         cl.set(Calendar.MONTH, monthDisplayed);
         cl.set(Calendar.DAY_OF_MONTH, 1);

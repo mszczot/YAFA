@@ -249,7 +249,16 @@
                 android:id="@+id/date"
                 android:textSize="@dimen/detailsFontSize"/>
 
+
+
         </LinearLayout>
+
+        <com.facebook.share.widget.ShareButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/share_button"
+            android:layout_gravity="center_horizontal"/>
+
     </LinearLayout>
 
     <LinearLayout

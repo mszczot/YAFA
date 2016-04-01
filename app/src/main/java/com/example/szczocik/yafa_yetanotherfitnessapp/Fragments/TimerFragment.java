@@ -16,12 +16,8 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.R;
 import java.io.Serializable;
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link TimerFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link TimerFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Create by: Marcin Szczot (40180425)
+ * Fragment for displaying running session details inside the running fragment
  */
 public class TimerFragment extends Fragment implements Serializable {
 
@@ -31,10 +27,10 @@ public class TimerFragment extends Fragment implements Serializable {
 
     private OnFragmentInteractionListener mListener;
 
+    //region boilerplate code
     public TimerFragment() {
         // Required empty public constructor
     }
-
 
     public static TimerFragment newInstance() {
         TimerFragment fragment = new TimerFragment();
@@ -97,19 +93,33 @@ public class TimerFragment extends Fragment implements Serializable {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+    //endregion
 
+    /**
+     * Method to start chronometer
+     */
     public void startChronometer() {
         chronometer.start();
     }
 
+    /**
+     * Method to stop chronometer
+     */
     public void stopChronometer() {
         chronometer.stop();
     }
 
+    /**
+     * Method to reset chronometer
+     */
     public void resetChronometer() {
         chronometer.setBase(SystemClock.elapsedRealtime());
     }
 
+    /**
+     * Method to update the displayed pace
+     * @param speed - pace as string
+     */
     public void updatePace(String speed){
         pace.setText(speed);
     }

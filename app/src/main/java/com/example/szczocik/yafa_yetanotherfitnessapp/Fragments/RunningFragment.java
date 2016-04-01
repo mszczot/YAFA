@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +31,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -40,12 +38,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link RunningFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link RunningFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Created by Marcin Szczot (40180425)
  */
 public class RunningFragment extends Fragment
         implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener,
@@ -53,8 +46,9 @@ public class RunningFragment extends Fragment
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    private static final int LOCATION_UPDATE_INTERVAL = 2 * 1000; //10 seconds
-    private static final int LOCATION_UPDATE_FASTEST_INTERVAL = 1 * 1000; //3 seconds
+    //settings for location listener
+    private static final int LOCATION_UPDATE_INTERVAL = 10 * 1000; //10 seconds
+    private static final int LOCATION_UPDATE_FASTEST_INTERVAL = 3 * 1000; //3 seconds
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int ACCURACY = 25;
 
@@ -79,8 +73,7 @@ public class RunningFragment extends Fragment
         // Required empty public constructor
     }
 
-    // TODO: Rename and change types and number of parameters
-    public static RunningFragment newInstance(LocationHandler lh) {
+    public static RunningFragment newInstance() {
         RunningFragment fragment = new RunningFragment();
         return fragment;
     }
@@ -99,16 +92,18 @@ public class RunningFragment extends Fragment
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        //create databasehandler and location handler
         db = new DatabaseHandler(getActivity());
         locationHandler = LocationHandler.getInstance(db);
 
+        //insert timer fragment to the layout
         timerFragment = new TimerFragment();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.timerFrame, timerFragment).commit();
 
         mapContainer = (FrameLayout) view.findViewById(R.id.map_container);
-        //initializeMap();
 
+        //set the button for starting/stopping session
         startButton = (Button) view.findViewById(R.id.startSession);
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,14 +112,17 @@ public class RunningFragment extends Fragment
             }
         });
 
+        //get the map
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //set up the location requests
         locationRequest = new LocationRequest();
         locationRequest.setInterval(LOCATION_UPDATE_INTERVAL);
         locationRequest.setFastestInterval(LOCATION_UPDATE_FASTEST_INTERVAL);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+        //get google API client and connect
         googleApiClient = new GoogleApiClient
                 .Builder(getContext())
                 .addApi(LocationServices.API)
@@ -135,26 +133,9 @@ public class RunningFragment extends Fragment
         googleApiClient.connect();
     }
 
-    public void initializeMap() {
-        if (mMap == null) {
-//            FragmentTransaction mTransaction = getChildFragmentManager().beginTransaction();
-//            SupportMapFragment mFRaFragment = new SupportMapFragment();
-//
-//
-//            mTransaction.add(R.id.map_container, mFRaFragment);
-//            mTransaction.commit();
-//            mFRaFragment.getMapAsync(this);
-//            try {
-//                MapsInitializer.initialize(getActivity());
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-
-            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
-        }
-    }
-
+    /**
+     * Method to setup Map with settings
+     */
     public void setupMapSettings() {
         UiSettings settings = mMap.getUiSettings();
         settings.setAllGesturesEnabled(false);
@@ -201,8 +182,13 @@ public class RunningFragment extends Fragment
         mListener = null;
     }
 
+    /**
+     * Method called when the map is ready
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        //get the map, enableMyLocation and setupup maps settings
         mMap = googleMap;
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
@@ -210,6 +196,9 @@ public class RunningFragment extends Fragment
         polyLine = new PolylineOptions();
     }
 
+    /**
+     * Method to enable my location button
+     */
     public void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -227,12 +216,18 @@ public class RunningFragment extends Fragment
         return false;
     }
 
+    /**
+     * Method called when the location is updated
+     * @param location
+     */
     @Override
     public void onLocationChanged(Location location) {
-        Log.d("Accuracy", String.valueOf(location.getAccuracy()));
+        //if location isn't null, update map
         if (location != null) {
             updateMap(location);
         }
+        //if the accuracy of the location is better then setup accuracy
+        //add location to the session, update ui and draw a line on the map
         if (location.getAccuracy() <= ACCURACY) {
             locationHandler.addLocationToSession(location);
             if (locationHandler.isInSession()) {
@@ -243,6 +238,10 @@ public class RunningFragment extends Fragment
         }
     }
 
+    /**
+     * Method to update the map. It move the map to the current position
+     * @param location
+     */
     private void updateMap(Location location) {
         LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
         if (mMap != null) {
@@ -250,6 +249,9 @@ public class RunningFragment extends Fragment
         }
     }
 
+    /**
+     * Method to update the UI. show Pace and avg speed
+     */
     private void updateUI() {
         timerFragment.updatePace(locationHandler.getPace());
         timerFragment.avgSpeedTV.setText(String.format("%.2f", locationHandler.getCurrentAvgSpeed()));
@@ -260,6 +262,9 @@ public class RunningFragment extends Fragment
         requestLocationUpdates();
     }
 
+    /**
+     * Method to request the location updates
+     */
     public void requestLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
@@ -276,10 +281,6 @@ public class RunningFragment extends Fragment
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 googleApiClient, locationRequest, this);
-    }
-
-    public void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
     }
 
     @Override
@@ -307,7 +308,12 @@ public class RunningFragment extends Fragment
         void onFragmentInteraction(Uri uri);
     }
 
+    /**
+     * Method to change the start/stop button
+     */
     public void changeButton() {
+        //if the user is in session, change the button to start
+        //stop the session and ask the user if the session should be saved
         if (isInSession) {
             isInSession = false;
             startButton.setBackgroundColor(getResources().getColor(R.color.green));
@@ -322,19 +328,22 @@ public class RunningFragment extends Fragment
                             "\nDistance: " + rs.getDistance() )
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
+                            //if yes, save the session and dismiss the dialog
                             locationHandler.saveCurrentSession((MainActivity) getActivity());
                             dialog.dismiss();
                         }
                     })
                     .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            locationHandler.disardCurrentSession();
+                            //if no, discard the session and cancel the dialog
+                            locationHandler.discardCurrentSession();
                             dialog.cancel();
                         }
                     })
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         } else {
+            //if wasn't in session, set the user in session and change the button to stop
             isInSession = true;
             startButton.setBackgroundColor(getResources().getColor(R.color.red));
             startButton.setText(getResources().getString(R.string.stop));
@@ -342,7 +351,11 @@ public class RunningFragment extends Fragment
         }
     }
 
+    /**
+     * Method to start the sesssion
+     */
     public void startSession() {
+        //start new session and chronometer
         locationHandler.startSession();
         timerFragment.resetChronometer();
         timerFragment.startChronometer();
@@ -350,13 +363,6 @@ public class RunningFragment extends Fragment
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         if (LocationServices.FusedLocationApi.getLastLocation(googleApiClient) != null) {
@@ -364,7 +370,11 @@ public class RunningFragment extends Fragment
         }
     }
 
+    /**
+     * Method to stop the session
+     */
     public void stopSession(){
+        //stop the session and chronometer
         locationHandler.stopSession();
         timerFragment.stopChronometer();
         timerFragment.pace.setText(getResources().getString(R.string.none));

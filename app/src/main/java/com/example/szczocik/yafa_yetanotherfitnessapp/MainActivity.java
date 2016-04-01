@@ -27,11 +27,14 @@ import com.example.szczocik.yafa_yetanotherfitnessapp.Fragments.TimerFragment;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.DatabaseHandler;
 import com.example.szczocik.yafa_yetanotherfitnessapp.Classes.LocationHandler;
 
-import com.facebook.FacebookSdk;
-
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Random;
+
+/**
+ * Created by: Marcin Szczot (40180425)
+ * Main activity with tabbed swipe navigation that holds three fragments
+ */
 
 public class MainActivity extends AppCompatActivity
     implements RunningFragment.OnFragmentInteractionListener,
@@ -40,24 +43,11 @@ public class MainActivity extends AppCompatActivity
         StatisticFragment.OnFragmentInteractionListener,
         Serializable {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
+
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
     private ViewPager mViewPager;
 
-    /**
-     * My variables: Database handler
-     */
     DatabaseHandler db;
     LocationHandler locationHandler;
 
@@ -80,6 +70,7 @@ public class MainActivity extends AppCompatActivity
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
+        //set the starting fragment to Running Fragment
         mViewPager.setCurrentItem(1);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
@@ -88,56 +79,41 @@ public class MainActivity extends AppCompatActivity
         setup();
     }
 
-
+    /**
+     * Method to initialize the variables
+     */
     private void setup() {
+        //create database handler and get instance of the location handler
         db = new DatabaseHandler(this);
         //test(db);
         locationHandler = locationHandler.getInstance(db);
         runningFragment = (RunningFragment) mSectionsPagerAdapter.getItem(1);
     }
 
+    /**
+     * Method to update the list in history fragment after ending session in running fragment
+     * @param lh - LocationHandler
+     */
     public void updateList(LocationHandler lh) {
 
         mSectionsPagerAdapter.historyFragment.adapter.insert(lh.getCurrentSession(), 0);
         mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Method to update the list in history fragment after removing a session
+     * @param rs - RunningSession to remove
+     */
     public void updateListAfterRemoval(RunningSession rs) {
         mSectionsPagerAdapter.historyFragment.adapter.remove(rs);
         mSectionsPagerAdapter.historyFragment.adapter.notifyDataSetChanged();
     }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onStop();
-    }
-
+    /**
+     * Method for testing the application
+     * it generates the random Running sessions and adds them to Database
+     * @param db
+     */
     public void test(DatabaseHandler db) {
         Calendar cl = Calendar.getInstance();
 
@@ -172,41 +148,41 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public PlaceholderFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
-        }
+    //region boilerplate code
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onStop();
+    }
+
+    //endregion
+
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -216,7 +192,6 @@ public class MainActivity extends AppCompatActivity
         implements Serializable {
 
         public HistoryFragment historyFragment;
-        public Fragment fragment;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -228,11 +203,11 @@ public class MainActivity extends AppCompatActivity
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch (position) {
                 case 0:
-                    return StatisticFragment.newInstance(locationHandler);
+                    return StatisticFragment.newInstance();
                 case 1:
-                    return RunningFragment.newInstance(locationHandler);
+                    return RunningFragment.newInstance();
                 case 2:
-                    historyFragment = HistoryFragment.newInstance(locationHandler);
+                    historyFragment = HistoryFragment.newInstance();
                     return historyFragment;
             }
             return null;
@@ -256,7 +231,5 @@ public class MainActivity extends AppCompatActivity
             }
             return null;
         }
-
-
     }
 }

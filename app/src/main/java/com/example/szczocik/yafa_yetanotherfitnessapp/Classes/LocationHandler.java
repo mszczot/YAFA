@@ -15,20 +15,21 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by szczocik on 11/03/16.
+ * Created by Marcin Szczot (40180425) on 11/03/16.
+ * Class that interacts with RunningSession and DatabaseHandler
+ * Singleton
  */
 public class LocationHandler implements Parcelable {
 
+    //region variables
     private static LocationHandler mInstance = null;
 
     private RunningSession rs;
     private DatabaseHandler db;
     private ArrayList<RunningSession> rsList;
+    //endregion
 
-
-    /**
-     * Constructor
-     */
+    //region constructors
     private LocationHandler(DatabaseHandler db) {
         this.db = db;
         rsList = db.getSessions();
@@ -39,6 +40,155 @@ public class LocationHandler implements Parcelable {
             mInstance = new LocationHandler(db);
         }
         return mInstance;
+    }
+    //endregion
+
+    //region public methods
+
+    /**
+     * Method to start the session
+     */
+    public void startSession(){
+        rs = new RunningSession();
+        rs.setSessionId(db.addSession(rs));
+    }
+
+    /**
+     * Method to stop the session
+     */
+    public void stopSession() {
+        rs.stop();
+    }
+
+    /**
+     * Method to save the current session in the database and update the history list
+     * @param ma
+     */
+    public void saveCurrentSession(MainActivity ma) {
+        db.updateSession(rs);
+        db.addLocationsFromList(rs.getLocList(), rs.getSessionId());
+        updateList(ma);
+        rs = null;
+    }
+
+    /**
+     * Method to discard the current session
+     */
+    public void discardCurrentSession() {
+        rs = null;
+    }
+
+    /**
+     * Method to add the location to current session
+     * @param l
+     */
+    public void addLocationToSession(Location l) {
+        if (rs != null) {
+            rs.addLocation(l);
+        }
+    }
+
+    /**
+     * Method to retrieve the Pace
+     * @return
+     */
+    public String getPace(){
+        if (rs != null) {
+            return rs.getPaceAsString();
+        } else {
+            return "00:00";
+        }
+    }
+
+    /**
+     * Method to retreve the average speed
+     * @return
+     */
+    public double getCurrentAvgSpeed() {
+        if (rs != null) {
+            return rs.getAvgSpeed();
+        }
+        return 0.00;
+    }
+
+    /**
+     * Method to check if running session exists
+     * @return
+     */
+    public boolean isInSession(){
+        if (rs != null) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Method to get the current session
+     * returns RunningSession object
+     * @return
+     */
+    public RunningSession getCurrentSession() {
+        return this.rs;
+    }
+
+    /**
+     * Method to retrieve the RunningSession from the list
+     * takes int position as parameter
+     * @param position
+     * @return
+     */
+    public RunningSession getRSFromList(int position) {
+        return rsList.get(position);
+    }
+
+    /**
+     * Method that returns all RunningSessions
+     * @return
+     */
+    public ArrayList<RunningSession> getRsList() {
+        return this.rsList;
+    }
+
+    /**
+     * Method that retrieves the RunningSession for given month
+     * @param compareDate
+     * @return
+     */
+    public ArrayList<RunningSession> getSessionForMonth(Calendar compareDate) {
+        ArrayList<RunningSession> list = new ArrayList<>();
+
+        for (RunningSession rs:rsList) {
+            Calendar rsDate = Calendar.getInstance();
+            rsDate.setTimeInMillis(rs.getLongStartTime());
+            if (rsDate.get(Calendar.MONTH) == compareDate.get(Calendar.MONTH)) {
+                list.add(rs);
+            }
+        }
+        return list;
+    }
+    //endregion
+
+    //region private methods
+
+    /**
+     * Method to update the list in History fragment
+     * @param ma
+     */
+    private void updateList(MainActivity ma) {
+        ma.updateList(this);
+    }
+    //endregion
+
+    //region parcelable methods
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(rs, flags);
+        dest.writeTypedList(rsList);
     }
 
     protected LocationHandler(Parcel in) {
@@ -57,125 +207,5 @@ public class LocationHandler implements Parcelable {
             return new LocationHandler[size];
         }
     };
-
-    /**
-     * public methods
-     */
-    public void startSession(){
-        rs = new RunningSession();
-        rs.setSessionId(db.addSession(rs));
-    }
-
-    public void stopSession() {
-        rs.stop();
-    }
-
-    public void saveCurrentSession(MainActivity ma) {
-        db.updateSession(rs);
-        db.addLocationsFromList(rs.getLocList(), rs.getSessionId());
-        updateList(ma);
-        rs = null;
-    }
-
-    public void disardCurrentSession() {
-        rs = null;
-    }
-
-    public void addLocationToSession(Location l) {
-        if (rs != null) {
-            rs.addLocation(l);
-        }
-    }
-
-
-    public double getCurrentSpeed() {
-        if (rs != null) {
-            return rs.getSpeed();
-        }
-        return 0.00;
-    }
-
-    public String getPace(){
-        if (rs != null) {
-            return rs.getPaceAsString();
-        } else {
-            return "00:00";
-        }
-    }
-
-    public double getCurrentAvgSpeed() {
-        if (rs != null) {
-            return rs.getAvgSpeed();
-        }
-        return 0.00;
-    }
-
-    public boolean isInSession(){
-        if (rs != null) {
-            return true;
-        }
-        return false;
-    }
-
-    public String getDuration() {
-        if (rs != null) {
-            return rs.getTotalTime();
-        } else {
-            return "";
-        }
-    }
-
-    public RunningSession getCurrentSession() {
-        return this.rs;
-    }
-
-    public RunningSession getRSFromList(int position) {
-        return rsList.get(position);
-    }
-
-    public int getRSListSize() {
-        return rsList.size();
-    }
-
-    public ArrayList<RunningSession> getRsList() {
-        return this.rsList;
-    }
-
-    public Location getPreviousLocation() {
-        return rs.getLocList().get(rs.getLocList().size() - 2);
-    }
-
-    public ArrayList<RunningSession> getSessionForMonth(Calendar compareDate) {
-        ArrayList<RunningSession> list = new ArrayList<>();
-
-        for (RunningSession rs:rsList) {
-            Calendar rsDate = Calendar.getInstance();
-            rsDate.setTimeInMillis(rs.getLongStartTime());
-            if (rsDate.get(Calendar.MONTH) == compareDate.get(Calendar.MONTH)) {
-                Log.d("Month", compareDate.getTime().toString());
-                list.add(rs);
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Private methods
-     */
-    private void updateList(MainActivity ma) {
-        ma.updateList(this);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(rs, flags);
-        dest.writeTypedList(rsList);
-    }
-
-
+    //endregion
 }

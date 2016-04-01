@@ -1,6 +1,8 @@
 package com.example.szczocik.yafa_yetanotherfitnessapp.Activities;
 
 import android.content.Intent;
+import android.provider.ContactsContract;
+import android.service.textservice.SpellCheckerService;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +32,10 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 
+/**
+ * Created by Marcin Szczot (40180425)
+ * Login activity
+ */
 public class Login extends AppCompatActivity {
 
     private LoginButton loginButton;
@@ -40,10 +46,13 @@ public class Login extends AppCompatActivity {
 
     TextView test;
 
+    Button login;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //creates new database handler and new instance of locationhandler
         db = new DatabaseHandler(this);
         lh = LocationHandler.getInstance(db);
 
@@ -54,7 +63,18 @@ public class Login extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
+        login = (Button) findViewById(R.id.login);
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        //Facebook login button
         loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setPublishPermissions("publish_actions");
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -64,17 +84,13 @@ public class Login extends AppCompatActivity {
             }
 
             @Override
-            public void onCancel() {
-
-            }
+            public void onCancel() {}
 
             @Override
-            public void onError(FacebookException error) {
-
-            }
+            public void onError(FacebookException error) {}
         });
-
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

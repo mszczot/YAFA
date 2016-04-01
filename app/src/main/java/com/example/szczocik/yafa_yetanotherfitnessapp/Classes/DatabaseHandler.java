@@ -6,19 +6,19 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
-import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
- * Created by szczocik on 09/03/16.
+ * Created by Marcin Szczot (40180425) on 09/03/16.
+ * Class to interact with SQLite database
  */
 public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
+    //region variables
     //All static variables
-    private static final int DATABASE_VERSION = 42;
+    private static final int DATABASE_VERSION = 44;
     //database name
     private static final String DATABASE_NAME = "runningManager";
     /**
@@ -48,11 +48,13 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
     private static final String LOCATION_LAT = "loc_lat";
     private static final String SESSION_ID = "session_id";
     private static final String ALTITUDE = "altitude";
+    //endregion
 
-
+    //region constructor
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+    //endregion
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -71,12 +73,17 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_LOCATIONS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
         // Create tables again
         onCreate(db);
     }
 
+    /**
+     * Method to add the RunningSession to the database
+     * @param rs
+     * @return
+     */
     public int addSession(RunningSession rs) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -107,6 +114,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         return sessionId;
     }
 
+    /**
+     * Method to update the existing RunningSession in the database
+     * @param rs
+     */
     public void updateSession(RunningSession rs) {
         String condition = KEY_ID + " = " + rs.getSessionId();
 
@@ -126,6 +137,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         db.close();
     }
 
+    /**
+     * Method to remove the specified RunningSession from the database
+     * @param rs
+     */
     public void removeSession(RunningSession rs) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -134,6 +149,11 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         db.execSQL(query);
     }
 
+    /**
+     * Method to add the Locations from the list to database to certain RunningSession
+     * @param locList
+     * @param rsId
+     */
     public void addLocationsFromList(ArrayList<Location> locList, int rsId) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -149,17 +169,10 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         db.close();
     }
 
-    public int getSessionsCount() {
-        String countQuery = "SELECT  * FROM " + TABLE_SESSIONS;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(countQuery, null);
-        int count = cursor.getCount();
-        cursor.close();
-
-        // return count
-        return count;
-    }
-
+    /**
+     * Method returning all RunningSessions from the database
+     * @return
+     */
     public ArrayList<RunningSession> getSessions() {
         String getSessions = "SELECT * FROM " + TABLE_SESSIONS + " ORDER BY " + KEY_ID + " DESC";
         SQLiteDatabase db = this.getReadableDatabase();
@@ -186,28 +199,11 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
         return  rsList;
     }
 
-    public ArrayList<Location> getLocations(){
-        ArrayList<Location> locList = new ArrayList<>();
-
-        String getLocations = "SELECT * FROM " + TABLE_LOCATIONS;
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(getLocations, null);
-        cursor.moveToFirst();
-        Location l;
-
-        while (!cursor.isAfterLast()) {
-            l = new Location("");
-            l.setLatitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LAT)));
-            l.setLongitude(cursor.getFloat(cursor.getColumnIndex(LOCATION_LONG)));
-
-            locList.add(l);
-            cursor.moveToNext();
-        }
-
-        return locList;
-    }
-
+    /**
+     * Method returning all the locations for specified session
+     * @param sessionId
+     * @return
+     */
     private ArrayList<Location> getLocationsForSession(int sessionId) {
         ArrayList<Location> locList = new ArrayList<>();
         Location loc;
@@ -230,6 +226,4 @@ public class DatabaseHandler extends SQLiteOpenHelper implements Serializable {
 
         return locList;
     }
-
-
 }
